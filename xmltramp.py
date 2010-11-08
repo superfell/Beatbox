@@ -1,9 +1,9 @@
 """xmltramp: Make XML documents easily accessible."""
 
-__version__ = "2.16"
+__version__ = "2.18"
 __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
-__copyright__ = "(C) 2003 Aaron Swartz. GNU GPL 2."
+__copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
 
 if not hasattr(__builtins__, 'True'): True, False = 1, 0
 def isstr(f): return isinstance(f, type('')) or isinstance(f, type(u''))
@@ -110,7 +110,7 @@ class Element:
 		if self._dNS: n = (self._dNS, n)
 		for x in self._dir:
 			if isinstance(x, Element) and x._name == n: return x
-		raise AttributeError, 'No child element named \''+n+"'"
+		raise AttributeError, 'No child element named %s' % repr(n)
 		
 	def __hasattr__(self, n):
 		for x in self._dir:
@@ -140,7 +140,7 @@ class Element:
 			if self._dNS and not islst(n): n = (self._dNS, n)
 			for x in self._dir:
 				if isinstance(x, Element) and x._name == n: return x
-			raise KeyError
+			raise KeyError, n
 	
 	def __setitem__(self, n, v):
 		if isinstance(n, type(0)): # d[1]
@@ -191,7 +191,7 @@ class Element:
 		if len(_pos) > 1:
 			for i in range(0, len(_pos), 2):
 				self._attrs[_pos[i]] = _pos[i+1]
-		if len(_pos) == 1 is not None:
+		if len(_pos) == 1:
 			return self._attrs[_pos[0]]
 		if len(_pos) == 0:
 			return self._attrs
@@ -220,7 +220,7 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
 		# szf: 5/15/5
 		if len(self.prefixes[prefix]) == 0:
 			del self.prefixes[prefix]
-
+	
 	def startElementNS(self, name, qname, attrs):
 		ch = self.ch; self.ch = ''	
 		if ch and not ch.isspace(): self.stack[-1]._dir.append(ch)
