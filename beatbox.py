@@ -1,9 +1,9 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
-__version__ = "0.9"
+__version__ = "0.91"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
+__copyright__ = "(C) 2006,2010 Simon Fell. GNU GPL 2."
 
 import httplib
 from urlparse import urlparse
@@ -69,7 +69,10 @@ class Client:
 	
 	def queryMore(self, queryLocator):
 		return QueryMoreRequest(self.__serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
-		
+	
+	def search(self, sosl):
+		return SearchRequest(self.__serverUrl, self.sessionId, sosl).post(self.__conn)
+			
 	def getUpdated(self, sObjectType, start, end):
 		return GetUpdatedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
 		
@@ -368,7 +371,16 @@ class QueryMoreRequest(QueryOptionsRequest):
 	def writeBody(self, s):
 		s.writeStringElement(_partnerNs, "queryLocator", self.__queryLocator)
 		
-
+		
+class SearchRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId, sosl):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "search")
+		self.__query = sosl
+	
+	def writeBody(self, s):
+		s.writeStringElement(_partnerNs, "searchString", self.__query)
+		
+		
 class GetUpdatedRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId, sObjectType, start, end, operationName="getUpdated"):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)

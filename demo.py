@@ -43,6 +43,13 @@ class BeatBoxDemo:
 			for rec in qr[sf.records:]:
 				print str(rec[0]) + " : " + str(rec[2]) + " : " + str(rec[3])
 
+	def search(self):				
+		print "\nsearch"
+		sr = svc.search("find {Apple*} in all fields")
+		for rec in sr[sf.searchRecords:]:
+			r = rec[sf.record]
+			print str(r[0]) + "\t: " + str(r[2])
+
 	def upsert(self):
 		print "\nupsert"
 		t = { 'type': 'Task', 
@@ -184,3 +191,4 @@ if __name__ == "__main__":
 		demo.delete()
 		demo.getDeleted()
 		demo.retrieve()
+		demo.search()
