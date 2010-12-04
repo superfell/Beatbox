@@ -1,0 +1,3 @@
+include README
+include *.py
+include MANIFEST.in
