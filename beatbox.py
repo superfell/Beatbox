@@ -43,7 +43,7 @@ def makeConnection(scheme, host):
 class Client:
 	def __init__(self):
 		self.batchSize = 500
-		self.serverUrl = "https://www.salesforce.com/services/Soap/u/7.0"
+		self.serverUrl = "https://login.salesforce.com/services/Soap/u/20.0"
 		self.__conn = None
 		
 	def __del__(self):
@@ -67,6 +67,10 @@ class Client:
 	def query(self, soql):
 		return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
 	
+	# query include deleted and archived rows.
+	def queryAll(self, soql):
+		return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql, "queryAll").post(self.__conn)
+		
 	def queryMore(self, queryLocator):
 		return QueryMoreRequest(self.__serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
 	
@@ -283,7 +287,9 @@ class SoapEnvelope:
 		if conn == None:
 			conn = makeConnection(scheme, host)
 			close = True
-		conn.request("POST", path, self.makeEnvelope(), headers)
+		rawRequest = self.makeEnvelope();
+		# print rawRequest
+		conn.request("POST", path, rawRequest, headers)
 		response = conn.getresponse()
 		rawResponse = response.read()
 		if response.getheader('content-encoding','') == 'gzip':
@@ -355,8 +361,8 @@ class QueryOptionsRequest(AuthenticatedRequest):
 		
 		
 class QueryRequest(QueryOptionsRequest):
-	def __init__(self, serverUrl, sessionId, batchSize, soql):
-		QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "query")
+	def __init__(self, serverUrl, sessionId, batchSize, soql, operationName="query"):
+		QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, operationName)
 		self.__query = soql
 				
 	def writeBody(self, s):

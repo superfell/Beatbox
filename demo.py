@@ -7,6 +7,7 @@ import datetime
 
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
+beatbox.gzipRequest=False
 
 class BeatBoxDemo:
 	def login(self, username, password):
@@ -21,8 +22,8 @@ class BeatBoxDemo:
 	def describeGlobal(self):
 		print "\ndescribeGlobal"
 		dg = svc.describeGlobal()
-		for t in dg[sf.types:]:
-			print str(t)
+		for t in dg[sf.sobjects:]:
+			print str(t[sf.name]) + " \t " + str(t[sf.label])
 
 	def describeTabs(self):
 		print "\ndescribeTabs"
@@ -30,8 +31,7 @@ class BeatBoxDemo:
 		for t in dt:
 			print str(t[sf.label])
 
-	def query(self):				
-		qr = svc.query("select Id, Name from Account")
+	def dumpQueryResult(self, qr):
 		print "query size = " + str(qr[sf.size])
 	
 		for rec in qr[sf.records:]:
@@ -43,6 +43,16 @@ class BeatBoxDemo:
 			for rec in qr[sf.records:]:
 				print str(rec[0]) + " : " + str(rec[2]) + " : " + str(rec[3])
 
+	def query(self):
+		print "\nquery"			
+		qr = svc.query("select Id, Name from Account")
+		self.dumpQueryResult(qr)
+
+	def queryAll(self):
+		print "\nqueryAll"
+		qr = svc.queryAll("select id, isDeleted from Account")
+		self.dumpQueryResult(qr)
+		
 	def search(self):				
 		print "\nsearch"
 		sr = svc.search("find {Apple*} in all fields")
@@ -75,7 +85,7 @@ class BeatBoxDemo:
 	def update(self):
 		print "\nupdate"
 		a = { 'type': 'Account',
-			  'Id':   '00130000005MSO4',
+			  'Id':   self.__idToDelete,
 			  'Name': 'BeatBoxBaby',
 			  'NumberofLocations__c': 123.456 }
 		sr = svc.update(a)
@@ -103,7 +113,7 @@ class BeatBoxDemo:
 		print "\ngetUpdated"
 		updatedIds = svc.getUpdated("Account", datetime.datetime.today()-datetime.timedelta(1), datetime.datetime.today()+datetime.timedelta(1))
 		self.__theIds = []
-		for id in updatedIds:
+		for id in updatedIds[sf.ids:]:
 			print "getUpdated " + str(id)
 			self.__theIds.append(str(id))
 
@@ -118,7 +128,8 @@ class BeatBoxDemo:
 	def getDeleted(self):
 		print "\ngetDeleted"
 		drs = svc.getDeleted("Account", datetime.datetime.today()-datetime.timedelta(1), datetime.datetime.today()+datetime.timedelta(1))
-		for dr in drs:
+		print "latestDate Covered : " + str(drs[sf.latestDateCovered])
+		for dr in drs[sf.deletedRecords:]:
 			print "getDeleted " + str(dr[sf.id]) + " on " + str(dr[sf.deletedDate])
 
 	def retrieve(self):
@@ -185,10 +196,12 @@ if __name__ == "__main__":
 		demo.describeLayout()
 		demo.query()
 		demo.upsert()
-		demo.update()
 		demo.create()
+		demo.update()
 		demo.getUpdated()
 		demo.delete()
 		demo.getDeleted()
+		demo.queryAll()
 		demo.retrieve()
 		demo.search()
+		
