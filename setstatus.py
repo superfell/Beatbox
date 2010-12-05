@@ -20,7 +20,7 @@ if __name__ == "__main__":
 				 'currentStatus' : sys.argv[3] }
 		r = svc.update(user)
 		if (str(r[sf.success]) == 'false'):
-			print "error updating status:" + str(ur[sf.errors][sf.statusCode]) + ":" + str(ur[sf.errors][sf.message])
+			print "error updating status:" + str(r[sf.errors][sf.statusCode]) + ":" + str(r[sf.errors][sf.message])
 		else:
 			print "success!"
 		
