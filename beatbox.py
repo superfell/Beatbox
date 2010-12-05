@@ -1,6 +1,6 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
-__version__ = "0.91"
+__version__ = "0.92"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "(C) 2006,2010 Simon Fell. GNU GPL 2."
