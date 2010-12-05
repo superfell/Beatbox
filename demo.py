@@ -125,6 +125,14 @@ class BeatBoxDemo:
 		else:
 			print "error " + str(dr[sf.errors][sf.statusCode]) + ":" + str(dr[sf.errors][sf.message])
 	
+	def undelete(self):
+		print "\nundelete"
+		dr = svc.undelete(self.__idToDelete)
+		if (str(dr[sf.success])) == 'true':
+			print "undeleted id " + str(dr[sf.id])
+		else:
+			print "error " + str(dr[sf.errors][sf.statusCode]) + ":" + str(dr[sf.errors][sf.message])
+
 	def getDeleted(self):
 		print "\ngetDeleted"
 		drs = svc.getDeleted("Account", datetime.datetime.today()-datetime.timedelta(1), datetime.datetime.today()+datetime.timedelta(1))
@@ -186,7 +194,7 @@ if __name__ == "__main__":
 		print "usage is demo.py <username> <password>"
 	else:
 		demo = BeatBoxDemo()
-		demo.login(sys.argv[1], sys.argv[2])			
+		demo.login(sys.argv[1], sys.argv[2])
 		demo.getServerTimestamp()
 		demo.getUserInfo()
 		demo.resetPassword()
@@ -202,6 +210,7 @@ if __name__ == "__main__":
 		demo.delete()
 		demo.getDeleted()
 		demo.queryAll()
+		demo.undelete()
 		demo.retrieve()
 		demo.search()
 		

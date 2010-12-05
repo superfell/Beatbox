@@ -102,6 +102,10 @@ class Client:
 	def delete(self, ids):
 		return DeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
 
+		# ids can be 1 or a list, returns a single delete result or a list
+	def undelete(self, ids):
+		return UndeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
+		
 	# sObjectTypes can be 1 or a list, returns a single describe result or a list of them
 	def describeSObjects(self, sObjectTypes):
 		return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, sObjectTypes).post(self.__conn)
@@ -431,13 +435,17 @@ class CreateRequest(UpdateRequest):
 		
 
 class DeleteRequest(AuthenticatedRequest):
-	def __init__(self, serverUrl, sessionId, ids):
-		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "delete")
+	def __init__(self, serverUrl, sessionId, ids, operationName="delete"):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
 		self.__ids = ids;
 		
 	def writeBody(self, s):
 		s.writeStringElement(_partnerNs, "id", self.__ids)
-				
+
+class UndeleteRequest(DeleteRequest):
+	def __init__(self, serverUrl, sessionId, ids):
+		DeleteRequest.__init__(self, serverUrl, sessionId, ids, "undelete")
+					
 		
 class RetrieveRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId, fields, sObjectType, ids):
