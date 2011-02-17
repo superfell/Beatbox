@@ -63,6 +63,11 @@ class Client:
 		(scheme, host, path, params, query, frag) = urlparse(self.__serverUrl)
 		self.__conn = makeConnection(scheme, host)
 
+	# calls logout which invalidates the current sessionId, in general its better to not call this and just 
+	# let the sessions expire on their own.
+	def logout(self):
+		return LogoutRequest(self.__serverUrl, self.sessionId).post(self.__conn, True)
+		
 	# set the batchSize property on the Client instance to change the batchsize for query/queryMore
 	def query(self, soql):
 		return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
@@ -351,7 +356,11 @@ class AuthenticatedRequest(SoapEnvelope):
 					s.writeStringElement(_sobjectNs, fn, sObjects[fn])
 			s.endElement()
 		
-						
+
+class LogoutRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "logout")
+		
 class QueryOptionsRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId, batchSize, operationName):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
