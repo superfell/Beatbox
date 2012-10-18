@@ -43,7 +43,7 @@ def makeConnection(scheme, host):
 class Client:
 	def __init__(self):
 		self.batchSize = 500
-		self.serverUrl = "https://login.salesforce.com/services/Soap/u/24.0"
+		self.serverUrl = "https://login.salesforce.com/services/Soap/u/26.0"
 		self.__conn = None
 		
 	def __del__(self):
