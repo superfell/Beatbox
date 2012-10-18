@@ -124,6 +124,9 @@ class Client:
 	def describeTabs(self):
 		return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeTabs").post(self.__conn, True)
 
+	def describeSearchScopeOrder(self):
+		return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeSearchScopeOrder").post(self.__conn, True)
+		
 	def getServerTimestamp(self):
 		return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp").post(self.__conn)[_tPartnerNS.timestamp])
 		
@@ -360,7 +363,8 @@ class AuthenticatedRequest(SoapEnvelope):
 class LogoutRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "logout")
-		
+
+
 class QueryOptionsRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId, batchSize, operationName):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)

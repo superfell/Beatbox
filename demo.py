@@ -31,6 +31,12 @@ class BeatBoxDemo:
 		for t in dt:
 			print str(t[sf.label])
 
+	def describeSearchScopeOrder(self):
+		print "\ndescribeSearchScopeOrder"
+		types = svc.describeSearchScopeOrder()
+		for t in types:
+			print "\t" + str(t[sf.name]) + " : " + str(t[sf.keyPrefix])
+			
 	def dumpQueryResult(self, qr):
 		print "query size = " + str(qr[sf.size])
 	
@@ -199,6 +205,7 @@ if __name__ == "__main__":
 		demo.getUserInfo()
 		demo.resetPassword()
 		demo.describeGlobal()
+		demo.describeSearchScopeOrder()
 		demo.describeTabs()
 		demo.describeSObjects()
 		demo.describeLayout()
