@@ -6,6 +6,7 @@ __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "(C) 2006-2012 Simon Fell. GNU GPL 2."
 
 import httplib
+import urllib
 from urlparse import urlparse
 from StringIO import StringIO
 import gzip
@@ -34,7 +35,16 @@ forceHttp=False		# force all connections to be HTTP, for debugging
 
 
 def makeConnection(scheme, host):
-	if forceHttp or scheme.upper() == 'HTTP':
+	if forceHttp:
+		return httplib.HTTPConnection(host)
+	proxies = urllib.getproxies()
+	proxy = proxies.get(scheme.lower(),None)
+	if proxy != None and not host in proxies.get('no', '').split(','):
+		proxyParsed = urlparse(proxy)
+		if proxyParsed.scheme.lower() == "http":
+			return httplib.HTTPConnection(proxyParsed.hostname, proxyParsed.port)
+		return httplib.HTTPSConnection(proxyParsed.hostname, proxyParsed.port)
+	if scheme.lower() == "http":
 		return httplib.HTTPConnection(host)
 	return httplib.HTTPSConnection(host)
 
@@ -301,7 +311,7 @@ class SoapEnvelope:
 			close = True
 		rawRequest = self.makeEnvelope();
 		# print rawRequest
-		conn.request("POST", path, rawRequest, headers)
+		conn.request("POST", self.serverUrl, rawRequest, headers)
 		response = conn.getresponse()
 		rawResponse = response.read()
 		if response.getheader('content-encoding','') == 'gzip':
