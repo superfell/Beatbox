@@ -56,6 +56,16 @@ class Client:
 		self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
 		return lr
 
+	# perform a portal login, orgId is always needed, portalId is needed for new style portals
+	# is not required for the old self service portal
+	# for the self service portal, only the login request will work, self service users don't
+	# get API access, for new portals, the users should have API acesss, and can call the rest 
+	# of the API.
+	def portalLogin(self, username, password, orgId, portalId):
+		lr = PortalLoginRequest(self.serverUrl, username, password, orgId, portalId).post()
+		self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
+		return lr
+		
 	# initialize from an existing sessionId & serverUrl, useful if we're being launched via a custom link	
 	def useSession(self, sessionId, serverUrl):
 		self.sessionId = sessionId
@@ -334,7 +344,19 @@ class LoginRequest(SoapEnvelope):
 		s.writeStringElement(_partnerNs, "username", self.__username)
 		s.writeStringElement(_partnerNs, "password", self.__password)
 
-
+class PortalLoginRequest(LoginRequest):
+	def __init__(self, serverUrl, username, password, orgId, portalId):
+		LoginRequest.__init__(self, serverUrl, username, password)
+		self.__orgId = orgId
+		self.__portalId = portalId
+	
+	def writeHeaders(self, s):
+		s.startElement(_partnerNs, "LoginScopeHeader")
+		s.writeStringElement(_partnerNs, "organizationId", self.__orgId)
+		if (not (self.__portalId is None or self.__portalId == "")):
+			s.writeStringElement(_partnerNs, "portalId", self.__portalId)
+		s.endElement()
+		
 # base class for all methods that require a sessionId
 class AuthenticatedRequest(SoapEnvelope):
 	def __init__(self, serverUrl, sessionId, operationName):
