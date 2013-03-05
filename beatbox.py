@@ -42,7 +42,9 @@ def makeConnection(scheme, host):
 	if proxy != None and not host in proxies.get('no', '').split(','):
 		proxyParsed = urlparse(proxy)
 		if proxyParsed.scheme.lower() == "http":
-			return httplib.HTTPConnection(proxyParsed.hostname, proxyParsed.port)
+			con = httplib.HTTPSConnection(proxyParsed.hostname, proxyParsed.port)
+			con.set_tunnel(host, 443)
+			return con
 		return httplib.HTTPSConnection(proxyParsed.hostname, proxyParsed.port)
 	if scheme.lower() == "http":
 		return httplib.HTTPConnection(host)
@@ -321,7 +323,7 @@ class SoapEnvelope:
 			close = True
 		rawRequest = self.makeEnvelope();
 		# print rawRequest
-		conn.request("POST", self.serverUrl, rawRequest, headers)
+		conn.request("POST", path, rawRequest, headers)
 		response = conn.getresponse()
 		rawResponse = response.read()
 		if response.getheader('content-encoding','') == 'gzip':
