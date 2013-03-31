@@ -5,6 +5,7 @@ __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "(C) 2006-2012 Simon Fell. GNU GPL 2."
 
+import sys
 import httplib
 from urlparse import urlparse
 from StringIO import StringIO
@@ -33,10 +34,12 @@ gzipResponse=True	# are we going to tell the server to gzip the response ?
 forceHttp=False		# force all connections to be HTTP, for debugging
 
 
-def makeConnection(scheme, host):
+def makeConnection(scheme, host, timeout=1200):
+    kwargs = {} if sys.version_info<(2,6,0) else {'timeout':timeout}
 	if forceHttp or scheme.upper() == 'HTTP':
-		return httplib.HTTPConnection(host)
-	return httplib.HTTPSConnection(host)
+		return httplib.HTTPConnection(host, **kwargs)
+	return httplib.HTTPSConnection(host, **kwargs)
+    
 
 
 # the main sforce client proxy class
@@ -45,6 +48,7 @@ class Client:
 		self.batchSize = 500
 		self.serverUrl = "https://login.salesforce.com/services/Soap/u/26.0"
 		self.__conn = None
+        self.timeout = 15
 		
 	def __del__(self):
 		if self.__conn != None:
