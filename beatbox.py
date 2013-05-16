@@ -35,11 +35,10 @@ forceHttp=False		# force all connections to be HTTP, for debugging
 
 
 def makeConnection(scheme, host, timeout=1200):
-    kwargs = {} if sys.version_info<(2,6,0) else {'timeout':timeout}
+	kwargs = {} if sys.version_info<(2,6,0) else {'timeout':timeout}
 	if forceHttp or scheme.upper() == 'HTTP':
 		return httplib.HTTPConnection(host, **kwargs)
 	return httplib.HTTPSConnection(host, **kwargs)
-    
 
 
 # the main sforce client proxy class
@@ -48,7 +47,7 @@ class Client:
 		self.batchSize = 500
 		self.serverUrl = "https://login.salesforce.com/services/Soap/u/26.0"
 		self.__conn = None
-        self.timeout = 15
+		self.timeout = 15
 		
 	def __del__(self):
 		if self.__conn != None:
