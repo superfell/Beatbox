@@ -176,15 +176,15 @@ class BeatBoxXmlGenerator(XMLGenerator):
 		return self._current_context[name[0]] + ":" + name[1]
 		
 	def startElementNS(self, name, qname, attrs):
-		self._out.write('<' + self.makeName(name))
+		self._write(unicode('<' + self.makeName(name)))
 		
 		for pair in self._undeclared_ns_maps:
-			self._out.write(' xmlns:%s="%s"' % pair)
+			self._write(unicode(' xmlns:%s="%s"' % pair))
 		self._undeclared_ns_maps = []
 		
 		for (name, value) in attrs.items():
-			self._out.write(' %s=%s' % (self.makeName(name), quoteattr(value)))
-		self._out.write('>')
+			self._write(unicode(' %s=%s' % (self.makeName(name), quoteattr(value))))
+		self._write(unicode('>'))
 
 # general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
 class XmlWriter:			
