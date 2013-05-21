@@ -1,9 +1,9 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
-__version__ = "0.94"
+__version__ = "0.95"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006-2012 Simon Fell. GNU GPL 2."
+__copyright__ = "(C) 2006-2013 Simon Fell. GNU GPL 2."
 
 import sys
 import httplib
@@ -45,7 +45,7 @@ def makeConnection(scheme, host, timeout=1200):
 class Client:
 	def __init__(self):
 		self.batchSize = 500
-		self.serverUrl = "https://login.salesforce.com/services/Soap/u/26.0"
+		self.serverUrl = "https://login.salesforce.com/services/Soap/u/28.0"
 		self.__conn = None
 		self.timeout = 15
 		
@@ -139,6 +139,15 @@ class Client:
 
 	def describeSearchScopeOrder(self):
 		return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeSearchScopeOrder").post(self.__conn, True)
+
+	def describeQuickActions(self, actions):
+		return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
+	
+	def describeAvailableQuickActions(self, parentType):
+		return DescribeAvailableQuickAtionsRequest(self.__serverUrl, self.sessionId, parentType).post(self.__conn, True)
+	
+	def performQuickActions(self, actions):
+		return PerformQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
 		
 	def getServerTimestamp(self):
 		return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp").post(self.__conn)[_tPartnerNS.timestamp])
@@ -383,7 +392,17 @@ class AuthenticatedRequest(SoapEnvelope):
 				if (fn != 'type'):
 					s.writeStringElement(_sobjectNs, fn, sObjects[fn])
 			s.endElement()
-		
+	
+	def writeDictionaries(self, s, items, elemName):
+		if islst(items):
+			for d in items:
+				self.writeDictionaries(self, s, d, elemName)
+		else:
+			s.startElement(_partnerNs, elemName)
+			for fn in items.keys():
+				s.writeStringElement(_partnerNs, fn, items[fn])
+			s.endElement()
+
 
 class LogoutRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId):
@@ -534,3 +553,29 @@ class DescribeLayoutRequest(AuthenticatedRequest):
 		
 	def writeBody(self, s):
 		s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType)
+
+
+class DescribeQuickActionsRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId, actions):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeQuickActions")
+		self.__actions = actions
+		
+	def writeBody(self, s):
+		s.writeStringElement(_partnerNs, "action", self.__actions)
+
+class DescribeAvailableQuickActionsRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId, parentType):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeAvailableQuickActions")
+		self.__parentType = parentType
+		
+	def writeBody(self, s):
+		s.writeStringElement(_partnerNs, "parentType", self.__parentType)
+		
+class PerformQuickActionsRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId, actions):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "performQuickActions")
+		self.__actions = actions
+		
+	def writeBody(self, s):
+		writeDictionaries(self, s, self.__actions, "quickActions")
+
