@@ -143,8 +143,8 @@ class Client:
 	def describeQuickActions(self, actions):
 		return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
 	
-	def describeAvailableQuickActions(self, parentType):
-		return DescribeAvailableQuickAtionsRequest(self.__serverUrl, self.sessionId, parentType).post(self.__conn, True)
+	def describeAvailableQuickActions(self, parentType = None):
+		return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, parentType).post(self.__conn, True)
 	
 	def performQuickActions(self, actions):
 		return PerformQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
@@ -256,18 +256,31 @@ class SoapFaultError(Exception):
 		
 # soap specific stuff ontop of XmlWriter
 class SoapWriter(XmlWriter):
+	__xsiNs = "http://www.w3.org/2001/XMLSchema-instance"
+	
 	def __init__(self):
 		XmlWriter.__init__(self, gzipRequest)
 		self.startPrefixMapping("s", _envNs)
 		self.startPrefixMapping("p", _partnerNs)
 		self.startPrefixMapping("o", _sobjectNs)
+		self.startPrefixMapping("x", SoapWriter.__xsiNs)
 		self.startElement(_envNs, "Envelope")
+	
+	def writeStringElement(self, namespace, name, value, attrs = _noAttrs):
+		if value is None:
+			if attrs:
+				attrs[(SoapWriter.__xsiNs, "nil")] = 'true';
+			else:
+				attrs = { (SoapWriter.__xsiNs, "nil") : 'true' }
+			value = ""
+		XmlWriter.writeStringElement(self, namespace, name, value, attrs)
 		
 	def endDocument(self):
 		self.endElement()  # envelope
 		self.endPrefixMapping("o")
 		self.endPrefixMapping("p")
 		self.endPrefixMapping("s")
+		self.endPrefixMapping("x")
 		return XmlWriter.endDocument(self)	
 
 # processing for a single soap request / response		
@@ -393,17 +406,6 @@ class AuthenticatedRequest(SoapEnvelope):
 					s.writeStringElement(_sobjectNs, fn, sObjects[fn])
 			s.endElement()
 	
-	def writeDictionaries(self, s, items, elemName):
-		if islst(items):
-			for d in items:
-				self.writeDictionaries(self, s, d, elemName)
-		else:
-			s.startElement(_partnerNs, elemName)
-			for fn in items.keys():
-				s.writeStringElement(_partnerNs, fn, items[fn])
-			s.endElement()
-
-
 class LogoutRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "logout")
@@ -577,5 +579,15 @@ class PerformQuickActionsRequest(AuthenticatedRequest):
 		self.__actions = actions
 		
 	def writeBody(self, s):
-		writeDictionaries(self, s, self.__actions, "quickActions")
+		if (islst(self.__actions)):
+			for action in self.__actions:
+				self.writeQuckAction(s, action)
+		else:
+			self.writeQuickAction(s, self.__actions)
 
+	def writeQuickAction(self, s, action):
+		s.startElement(_partnerNs, "quickActions")
+		s.writeStringElement(_partnerNs, "parentId", action.get("parentId"))
+		s.writeStringElement(_partnerNs, "quickActionName", action["quickActionName"])
+		self.writeSObjects(s, action["records"], "records")
+		s.endElement()
