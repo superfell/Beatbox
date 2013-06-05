@@ -403,6 +403,9 @@ class AuthenticatedRequest(SoapEnvelope):
 			s.writeStringElement(_sobjectNs, "type", sObjects['type'])
 			for fn in sObjects.keys():
 				if (fn != 'type'):
+	                            if (isinstance(sObjects[fn],dict)):
+                                        self.writeSObjects(s, sObjects[fn], fn)
+                                    else:
 					s.writeStringElement(_sobjectNs, fn, sObjects[fn])
 			s.endElement()
 	
