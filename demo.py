@@ -203,7 +203,7 @@ if __name__ == "__main__":
 		demo.login(sys.argv[1], sys.argv[2])
 		demo.getServerTimestamp()
 		demo.getUserInfo()
-		demo.resetPassword()
+		#demo.resetPassword()
 		demo.describeGlobal()
 		demo.describeSearchScopeOrder()
 		demo.describeTabs()
