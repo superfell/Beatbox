@@ -171,6 +171,19 @@ class BeatBoxDemo:
 		svc.setPassword(str(ui[sf.userId]), self.password)
 		print "password set back to original password"
 	
+	def convertLead(self):
+		print "\nconvertLead"
+		lead = { 'type' : 'Lead', 
+				 'LastName' : 'Fell', 
+				 'Company' : '@superfell' }
+		leadId = str(svc.create(lead)[sf.id])
+		print "created new lead with id " + leadId
+		convert = { 'leadId' : leadId,
+					'convertedStatus' : 'Closed - Converted',
+					'doNotCreateOpportunity' : 'true' }
+		res = svc.convertLead(convert)
+		print "converted lead to contact with Id " + str(res[sf.contactId])
+					
 	def describeSObjects(self):
 		print "\ndescribeSObjects(Account)"
 		desc = svc.describeSObjects("Account")
@@ -203,6 +216,7 @@ if __name__ == "__main__":
 		demo.login(sys.argv[1], sys.argv[2])
 		demo.getServerTimestamp()
 		demo.getUserInfo()
+		demo.convertLead()
 		#demo.resetPassword()
 		demo.describeGlobal()
 		demo.describeSearchScopeOrder()

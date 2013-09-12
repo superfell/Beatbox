@@ -120,9 +120,22 @@ class Client:
 	def delete(self, ids):
 		return DeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
 
-		# ids can be 1 or a list, returns a single delete result or a list
+	# ids can be 1 or a list, returns a single delete result or a list
 	def undelete(self, ids):
 		return UndeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
+	
+	# leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per the LeadConvert type in the WSDL.
+	# 	<element name="accountId"              type="tns:ID" nillable="true"/>
+    # 	<element name="contactId"              type="tns:ID" nillable="true"/>
+    # 	<element name="convertedStatus"        type="xsd:string"/>
+    # 	<element name="doNotCreateOpportunity" type="xsd:boolean"/>
+    # 	<element name="leadId"                 type="tns:ID"/>
+    # 	<element name="opportunityName"        type="xsd:string" nillable="true"/>
+    # 	<element name="overwriteLeadSource"    type="xsd:boolean"/>
+    # 	<element name="ownerId"                type="tns:ID"     nillable="true"/>
+    # 	<element name="sendNotificationEmail"  type="xsd:boolean"/>
+	def convertLead(self, leadConverts):
+		return ConvertLeadRequest(self.__serverUrl, self.sessionId, leadConverts).post(self.__conn)
 		
 	# sObjectTypes can be 1 or a list, returns a single describe result or a list of them
 	def describeSObjects(self, sObjectTypes):
@@ -393,6 +406,19 @@ class AuthenticatedRequest(SoapEnvelope):
 		s.writeStringElement(_partnerNs, "sessionId", self.sessionId)
 		s.endElement()
 
+	def writeDict(self, s, elemName, d):
+		if islst(d):
+			for o in d:
+				self.writeDict(s, elemName, o)
+		else:
+			s.startElement(_partnerNs, elemName)
+			for fn in d.keys():
+				if (isinstance(d[fn], dict)):
+					self.writeDict(s, d[fn], fn)
+				else:
+					s.writeStringElement(_sobjectNs, fn, d[fn])
+			s.endElement()
+
 	def writeSObjects(self, s, sObjects, elemName="sObjects"):
 		if islst(sObjects):
 			for o in sObjects:
@@ -403,10 +429,10 @@ class AuthenticatedRequest(SoapEnvelope):
 			s.writeStringElement(_sobjectNs, "type", sObjects['type'])
 			for fn in sObjects.keys():
 				if (fn != 'type'):
-	                            if (isinstance(sObjects[fn],dict)):
-                                        self.writeSObjects(s, sObjects[fn], fn)
-                                    else:
-					s.writeStringElement(_sobjectNs, fn, sObjects[fn])
+					if (isinstance(sObjects[fn],dict)):
+						self.writeSObjects(s, sObjects[fn], fn)
+					else:
+						s.writeStringElement(_sobjectNs, fn, sObjects[fn])
 			s.endElement()
 	
 class LogoutRequest(AuthenticatedRequest):
@@ -541,7 +567,16 @@ class SetPasswordRequest(AuthenticatedRequest):
 		s.writeStringElement(_partnerNs, "userId", self.__userId)
 		s.writeStringElement(_partnerNs, "password", self.__password)	
 		
-				
+
+class ConvertLeadRequest(AuthenticatedRequest):
+	def __init__(self, serverUrl, sessionId, leadConverts):
+		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "convertLead")
+		self.__leads = leadConverts
+	
+	def writeBody(self, s):
+		self.writeDict(s, "leadConverts", self.__leads)
+
+
 class DescribeSObjectsRequest(AuthenticatedRequest):
 	def __init__(self, serverUrl, sessionId, sObjectTypes):
 		AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeSObjects")
