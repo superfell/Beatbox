@@ -15,12 +15,11 @@ if __name__ == "__main__":
 	else:
 		loginResult = svc.login(sys.argv[1], sys.argv[2])
 		print "welcome " + str(loginResult[sf.userInfo][sf.userFullName])
-		user = { 'type' : 'User',
-				 'id'   : str(loginResult[sf.userId]),
-				 'currentStatus' : sys.argv[3] }
-		r = svc.update(user)
+		user = { 'type' : 'FeedItem',
+				 'parentId'   	: str(loginResult[sf.userId]),
+				 'body' 		: sys.argv[3] }
+		r = svc.create(user)
 		if (str(r[sf.success]) == 'false'):
 			print "error updating status:" + str(r[sf.errors][sf.statusCode]) + ":" + str(r[sf.errors][sf.message])
 		else:
 			print "success!"
-		
