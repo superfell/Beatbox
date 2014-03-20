@@ -3,7 +3,7 @@
 __version__ = "0.95"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006-2013 Simon Fell. GNU GPL 2."
+__copyright__ = "(C) 2006-2014 Simon Fell. GNU GPL 2."
 
 import sys
 import httplib
