@@ -179,6 +179,7 @@ class Client:
 # fixed version of XmlGenerator, handles unqualified attributes correctly
 class BeatBoxXmlGenerator(XMLGenerator):
 	def __init__(self, destination, encoding):
+		self._out = destination
 		XMLGenerator.__init__(self, destination, encoding)
 	
 	def makeName(self, name):	
