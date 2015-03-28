@@ -1,9 +1,9 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
-__version__ = "0.95"
+__version__ = "0.96"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006-2013 Simon Fell. GNU GPL 2."
+__copyright__ = "(C) 2006-2015 Simon Fell. GNU GPL 2."
 
 import sys
 import httplib
@@ -45,7 +45,7 @@ def makeConnection(scheme, host, timeout=1200):
 class Client:
 	def __init__(self):
 		self.batchSize = 500
-		self.serverUrl = "https://login.salesforce.com/services/Soap/u/28.0"
+		self.serverUrl = "https://login.salesforce.com/services/Soap/u/33.0"
 		self.__conn = None
 		self.timeout = 15
 
