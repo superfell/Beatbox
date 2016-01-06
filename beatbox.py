@@ -279,7 +279,7 @@ class BeatBoxXmlGenerator(XMLGenerator):
 # general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
 class XmlWriter:
 	def __init__(self, doGzip):
-		self.__buf = StringIO("")
+		self.__buf = BytesIO(b"")
 		if doGzip:
 			self.__gzip = gzip.GzipFile(mode='wb', fileobj=self.__buf)
 			stm = self.__gzip
