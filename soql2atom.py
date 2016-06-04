@@ -17,6 +17,7 @@
    I have this in a .htaccess file in the same directory as soql2atom.py etc.
 """
 
+from __future__ import print_function
 __version__ = "1.0"
 __author__ = "Simon Fell"
 __copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
@@ -59,10 +60,10 @@ def soql2atom(loginResult, soql, title):
 	atom_ns = "http://www.w3.org/2005/Atom"
 	ent_ns = "urn:sobject.enterprise.soap.sforce.com"
 
-	print "content-type: application/atom+xml"
+	print("content-type: application/atom+xml")
 	doGzip = os.environ.has_key("HTTP_ACCEPT_ENCODING") and "gzip" in string.lower(os.environ["HTTP_ACCEPT_ENCODING"]).split(',')
-	if (doGzip): print "content-encoding: gzip"
-	print ""
+	if (doGzip): print("content-encoding: gzip")
+	print()
 	x = beatbox.XmlWriter(doGzip)
 	x.startPrefixMapping("a", atom_ns)
 	x.startPrefixMapping("s", ent_ns)
@@ -102,7 +103,7 @@ def soql2atom(loginResult, soql, title):
 		x.characters("\n")
 		x.endElement() # entry
 	x.endElement() # feed
-	print x.endDocument()
+	print(x.endDocument())
 
 def writeLink(x, namespace, localname, rel, type, href):
 	rel = AttributesNSImpl( {(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type }, 
@@ -111,11 +112,11 @@ def writeLink(x, namespace, localname, rel, type, href):
 	x.endElement()
 
 def authenticationRequired(message="Unauthorized"):
-	print "status: 401 Unauthorized"
-	print "WWW-authenticate: Basic realm=""www.salesforce.com"""
-	print "content-type: text/plain"
-	print ""
-	print message
+	print("status: 401 Unauthorized")
+	print("WWW-authenticate: Basic realm=""www.salesforce.com""")
+	print("content-type: text/plain")
+	print()
+	print(message)
 
 if not os.environ.has_key('X_HTTP_AUTHORIZATION') or os.environ['X_HTTP_AUTHORIZATION'] == '':
 	authenticationRequired()

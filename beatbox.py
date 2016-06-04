@@ -1,5 +1,6 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 
+from __future__ import print_function
 __version__ = "0.96"
 __author__ = "Simon Fell"
 __credits__ = "Mad shouts to the sforce possie"
@@ -425,7 +426,7 @@ class SoapEnvelope:
 			conn = makeConnection(scheme, host)
 			close = True
 		rawRequest = self.makeEnvelope();
-		# print rawRequest
+		# print(rawRequest)
 		conn.request("POST", path, rawRequest, headers)
 		response = conn.getresponse()
 		rawResponse = response.read()
