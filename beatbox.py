@@ -35,7 +35,7 @@ forceHttp=False		# force all connections to be HTTP, for debugging
 
 
 def makeConnection(scheme, host, timeout=1200):
-	kwargs = {} if sys.version_info<(2,6,0) else {'timeout':timeout}
+	kwargs = {'timeout':timeout}
 	if forceHttp or scheme.upper() == 'HTTP':
 		return httplib.HTTPConnection(host, **kwargs)
 	return httplib.HTTPSConnection(host, **kwargs)
