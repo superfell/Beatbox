@@ -1,13 +1,16 @@
 """xmltramp: Make XML documents easily accessible."""
 
+import re
+from six import PY2, StringIO, text_type
+from six.moves import xrange
+from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
+from xml.sax import make_parser
+from xml.sax.handler import feature_namespaces
+
 __version__ = "2.18"
 __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
 __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
-
-import re
-from six import PY2, StringIO, text_type
-from six.moves import xrange
 
 
 def isstr(f):
@@ -51,14 +54,14 @@ def python_2_unicode_compatible(klass):
 
 
 @python_2_unicode_compatible
-class Element:
+class Element(object):
     def __init__(self, name, attrs=None, children=None, prefixes=None):
-        if islst(name) and name[0] == None:
+        if islst(name) and name[0] is None:
             name = name[1]
         if attrs:
             na = {}
             for k in attrs.keys():
-                if islst(k) and k[0] == None:
+                if islst(k) and k[0] is None:
                     na[k[1]] = attrs[k]
                 else:
                     na[k] = attrs[k]
@@ -90,7 +93,7 @@ class Element:
             out = ''
 
             for p in self._prefixes.keys():
-                if not p in inprefixes.keys():
+                if p not in inprefixes.keys():
                     if addns:
                         out += ' xmlns'
                     if addns and self._prefixes[p]:
@@ -266,7 +269,7 @@ class Element:
         return len(self._dir)
 
 
-class Namespace:
+class Namespace(object):
     def __init__(self, uri):
         self.__uri = uri
 
@@ -275,9 +278,6 @@ class Namespace:
 
     def __getitem__(self, n):
         return (self.__uri, n)
-
-
-from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
 
 
 class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
@@ -327,10 +327,6 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
             self.result = element
 
 
-from xml.sax import make_parser
-from xml.sax.handler import feature_namespaces
-
-
 def seed(fileobj):
     seeder = Seeder()
     parser = make_parser()
@@ -372,7 +368,7 @@ def unittest():
     except AttributeError:
         pass
 
-    assert hasattr(d, 'bar') == True
+    assert hasattr(d, 'bar')
 
     assert d('foo') == 'bar'
     d(silly='yes')
@@ -478,12 +474,12 @@ def unittest():
     assert e.__repr__(1) == '<e c="that &quot;sucks&quot;"></e>'
 
     assert quote("]]>") == "]]&gt;"
-    assert quote('< dkdkdsd dkd sksdksdfsd fsdfdsf]]> kfdfkg >') == \
-                 '&lt; dkdkdsd dkd sksdksdfsd fsdfdsf]]&gt; kfdfkg >'
+    assert (quote('< dkdkdsd dkd sksdksdfsd fsdfdsf]]> kfdfkg >') ==
+            '&lt; dkdkdsd dkd sksdksdfsd fsdfdsf]]&gt; kfdfkg >')
 
     assert parse('<x a="&lt;"></x>').__repr__(1) == '<x a="&lt;"></x>'
-    assert parse('<a xmlns="http://a"><b xmlns="http://b"/></a>').__repr__(1) == \
-                 '<a xmlns="http://a"><b xmlns="http://b"></b></a>'
+    assert (parse('<a xmlns="http://a"><b xmlns="http://b"/></a>').__repr__(1) ==
+            '<a xmlns="http://a"><b xmlns="http://b"></b></a>')
 
 if __name__ == '__main__':
     unittest()

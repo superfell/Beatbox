@@ -1,13 +1,7 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
-
 from __future__ import print_function
-__version__ = "0.96"
-__author__ = "Simon Fell"
-__credits__ = "Mad shouts to the sforce possie"
-__copyright__ = "(C) 2006-2015 Simon Fell. GNU GPL 2."
 
-import sys
-from six.moves import http_client
+from six.moves import http_client, xrange
 from six.moves.urllib.parse import urlparse
 from six import PY3, BytesIO, text_type
 import gzip
@@ -17,6 +11,11 @@ from xmltramp import islst
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl
+
+__version__ = "0.96"
+__author__ = "Simon Fell"
+__credits__ = "Mad shouts to the sforce possie"
+__copyright__ = "(C) 2006-2015 Simon Fell. GNU GPL 2."
 
 # global constants for namespace strings, used during serialization
 _partnerNs = "urn:partner.soap.sforce.com"
@@ -30,20 +29,20 @@ _tSObjectNS = xmltramp.Namespace(_sobjectNs)
 _tSoapNS = xmltramp.Namespace(_envNs)
 
 # global config
-gzipRequest=True    # are we going to gzip the request ?
-gzipResponse=True   # are we going to tell the server to gzip the response ?
-forceHttp=False     # force all connections to be HTTP, for debugging
+gzipRequest = True    # are we going to gzip the request ?
+gzipResponse = True   # are we going to tell the server to gzip the response ?
+forceHttp = False     # force all connections to be HTTP, for debugging
 
 
 def makeConnection(scheme, host, timeout=1200):
-    kwargs = {'timeout':timeout}
+    kwargs = {'timeout': timeout}
     if forceHttp or scheme.upper() == 'HTTP':
         return http_client.HTTPConnection(host, **kwargs)
     return http_client.HTTPSConnection(host, **kwargs)
 
 
 # the main sforce client proxy class
-class Client:
+class Client(object):
     def __init__(self):
         self.batchSize = 500
         self.serverUrl = "https://login.salesforce.com/services/Soap/u/36.0"
@@ -51,7 +50,7 @@ class Client:
         self.timeout = 15
 
     def __del__(self):
-        if self.__conn != None:
+        if self.__conn:
             self.__conn.close()
 
     # login, the serverUrl and sessionId are automatically handled, returns the loginResult structure
@@ -125,7 +124,8 @@ class Client:
     def undelete(self, ids):
         return UndeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
 
-    # leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per the LeadConvert type in the WSDL.
+    # leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per
+    # the LeadConvert type in the WSDL.
     #   <element name="accountId"              type="tns:ID" nillable="true"/>
     #   <element name="contactId"              type="tns:ID" nillable="true"/>
     #   <element name="convertedStatus"        type="xsd:string"/>
@@ -152,19 +152,22 @@ class Client:
         return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeTabs").post(self.__conn, True)
 
     def describeSearchScopeOrder(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeSearchScopeOrder").post(self.__conn, True)
+        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeSearchScopeOrder"
+                                    ).post(self.__conn, True)
 
     def describeQuickActions(self, actions):
         return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
 
-    def describeAvailableQuickActions(self, parentType = None):
-        return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, parentType).post(self.__conn, True)
+    def describeAvailableQuickActions(self, parentType=None):
+        return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, parentType
+                                                    ).post(self.__conn, True)
 
     def performQuickActions(self, actions):
         return PerformQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
 
     def getServerTimestamp(self):
-        return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp").post(self.__conn)[_tPartnerNS.timestamp])
+        return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp"
+                                        ).post(self.__conn)[_tPartnerNS.timestamp])
 
     def resetPassword(self, userId):
         return ResetPasswordRequest(self.__serverUrl, self.sessionId, userId).post(self.__conn)
@@ -175,9 +178,10 @@ class Client:
     def getUserInfo(self):
         return AuthenticatedRequest(self.__serverUrl, self.sessionId, "getUserInfo").post(self.__conn)
 
-    #def convertLead(self, convertLeads):
+    # def convertLead(self, convertLeads):
 
-class IterClient(Client,object):
+
+class IterClient(Client):
 
     def __init__(self):
         super(IterClient, self).__init__()
@@ -186,7 +190,7 @@ class IterClient(Client,object):
         while 1:
             for elem in queryHandle[_tPartnerNS.records:]:
                 yield elem
-            if  str(queryHandle[_tPartnerNS.done]) == 'true':
+            if str(queryHandle[_tPartnerNS.done]) == 'true':
                 break
             else:
                 queryHandle = self.queryMore(queryHandle.queryLocator)
@@ -198,16 +202,16 @@ class IterClient(Client,object):
             if chunkLength is None:
                 chunkLength = self.batchSize
             for i in xrange(0, len(collection), chunkLength):
-                yield collection[i:i+chunkLength]
+                yield collection[i:i + chunkLength]
 
     def query(self, soql):
-        return self.gatherRecords( super(IterClient, self).query(soql) )
+        return self.gatherRecords(super(IterClient, self).query(soql))
 
     def queryAll(self, soql):
-        return self.gatherRecords( super(IterClient, self).queryAll(soql) )
+        return self.gatherRecords(super(IterClient, self).queryAll(soql))
 
     def create(self, sObjects, chunkLength=None):
-        for chunk in self.chunkRequests(sObjects,chunkLength=chunkLength):
+        for chunk in self.chunkRequests(sObjects, chunkLength=chunkLength):
             if len(chunk) == 1:
                 responses = [super(IterClient, self).create(chunk)]
             else:
@@ -225,17 +229,17 @@ class IterClient(Client,object):
                 yield response
 
     def upsert(self, externalIdName, sObjects, chunkLength=None):
-        for chunk in self.chunkRequests(sObjects,chunkLength=chunkLength):
+        for chunk in self.chunkRequests(sObjects, chunkLength=chunkLength):
             if len(chunk) == 1:
-                responses = [super(IterClient, self).upsert(externalIdName,chunk)]
+                responses = [super(IterClient, self).upsert(externalIdName, chunk)]
             else:
-                responses = super(IterClient, self).upsert(externalIdName,chunk)
+                responses = super(IterClient, self).upsert(externalIdName, chunk)
 
             for response in responses:
                 yield response
 
     def delete(self, ids, chunkLength=None):
-        for chunk in self.chunkRequests(ids,chunkLength=chunkLength):
+        for chunk in self.chunkRequests(ids, chunkLength=chunkLength):
             if len(chunk) == 1:
                 responses = [super(IterClient, self).delete(chunk)]
             else:
@@ -244,7 +248,7 @@ class IterClient(Client,object):
                 yield response
 
     def undelete(self, ids, chunkLength=None):
-        for chunk in self.chunkRequests(ids,chunkLength=chunkLength):
+        for chunk in self.chunkRequests(ids, chunkLength=chunkLength):
             if len(chunk) == 1:
                 responses = [super(IterClient, self).undelete(chunk)]
             else:
@@ -261,7 +265,7 @@ class BeatBoxXmlGenerator(XMLGenerator):
 
     def makeName(self, name):
         if name[0] is None:
-            #if the name was not namespace-scoped, use the qualified part
+            # if the name was not namespace-scoped, use the qualified part
             return name[1]
         # else try to restore the original prefix from the namespace
         return self._current_context[name[0]] + ":" + name[1]
@@ -277,8 +281,9 @@ class BeatBoxXmlGenerator(XMLGenerator):
             self._write(text_type(' %s=%s' % (self.makeName(name), quoteattr(value))))
         self._write(text_type('>'))
 
+
 # general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
-class XmlWriter:
+class XmlWriter(object):
     def __init__(self, doGzip):
         self.__buf = BytesIO()
         if doGzip:
@@ -297,12 +302,12 @@ class XmlWriter:
     def endPrefixMapping(self, prefix):
         self.xg.endPrefixMapping(prefix)
 
-    def startElement(self, namespace, name, attrs = _noAttrs):
+    def startElement(self, namespace, name, attrs=_noAttrs):
         self.xg.startElementNS((namespace, name), name, attrs)
         self.__elems.append((namespace, name))
 
     # if value is a list, then it writes out repeating elements, one for each value
-    def writeStringElement(self, namespace, name, value, attrs = _noAttrs):
+    def writeStringElement(self, namespace, name, value, attrs=_noAttrs):
         if islst(value):
             for v in value:
                 self.writeStringElement(namespace, name, v, attrs)
@@ -312,7 +317,7 @@ class XmlWriter:
             self.endElement()
 
     def endElement(self):
-        e = self.__elems[-1];
+        e = self.__elems[-1]
         self.xg.endElementNS(e, e[1])
         del self.__elems[-1]
 
@@ -332,9 +337,10 @@ class XmlWriter:
 
     def endDocument(self):
         self.xg.endDocument()
-        if (self.__gzip != None):
-            self.__gzip.close();
+        if (self.__gzip is not None):
+            self.__gzip.close()
         return self.__buf.getvalue()
+
 
 # exception class for soap faults
 class SoapFaultError(Exception):
@@ -344,6 +350,7 @@ class SoapFaultError(Exception):
 
     def __str__(self):
         return repr(self.faultCode) + " " + repr(self.faultString)
+
 
 # soap specific stuff ontop of XmlWriter
 class SoapWriter(XmlWriter):
@@ -357,12 +364,12 @@ class SoapWriter(XmlWriter):
         self.startPrefixMapping("x", SoapWriter.__xsiNs)
         self.startElement(_envNs, "Envelope")
 
-    def writeStringElement(self, namespace, name, value, attrs = _noAttrs):
+    def writeStringElement(self, namespace, name, value, attrs=_noAttrs):
         if value is None:
             if attrs:
-                attrs[(SoapWriter.__xsiNs, "nil")] = 'true';
+                attrs[(SoapWriter.__xsiNs, "nil")] = 'true'
             else:
-                attrs = { (SoapWriter.__xsiNs, "nil") : 'true' }
+                attrs = {(SoapWriter.__xsiNs, "nil"): 'true'}
             value = ""
         XmlWriter.writeStringElement(self, namespace, name, value, attrs)
 
@@ -374,8 +381,9 @@ class SoapWriter(XmlWriter):
         self.endPrefixMapping("x")
         return XmlWriter.endDocument(self)
 
+
 # processing for a single soap request / response
-class SoapEnvelope:
+class SoapEnvelope(object):
     def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName
@@ -413,24 +421,24 @@ class SoapEnvelope:
     #   todo: check for mU='1' headers
     #   returns the relevant result from the body child
     def post(self, conn=None, alwaysReturnList=False):
-        headers = { "User-Agent": "BeatBox/" + __version__,
-                    "SOAPAction": "\"\"",
-                    "Content-Type": "text/xml; charset=utf-8" }
+        headers = {"User-Agent": "BeatBox/" + __version__,
+                   "SOAPAction": "\"\"",
+                   "Content-Type": "text/xml; charset=utf-8"}
         if gzipResponse:
             headers['accept-encoding'] = 'gzip'
         if gzipRequest:
             headers['content-encoding'] = 'gzip'
         close = False
         (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)
-        if conn == None:
+        if conn is None:
             conn = makeConnection(scheme, host)
             close = True
-        rawRequest = self.makeEnvelope();
+        rawRequest = self.makeEnvelope()
         # print(rawRequest)
         conn.request("POST", path, rawRequest, headers)
         response = conn.getresponse()
         rawResponse = response.read()
-        if response.getheader('content-encoding','') == 'gzip':
+        if response.getheader('content-encoding', '') == 'gzip':
             rawResponse = gzip.GzipFile(fileobj=BytesIO(rawResponse)).read()
         if close:
             conn.close()
@@ -438,7 +446,7 @@ class SoapEnvelope:
         tramp = xmltramp.parse(string_response)
         try:
             faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
-            faultCode   = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]
+            faultCode = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]
             raise SoapFaultError(faultCode, faultString)
         except KeyError:
             pass
@@ -461,6 +469,7 @@ class LoginRequest(SoapEnvelope):
         s.writeStringElement(_partnerNs, "username", self.__username)
         s.writeStringElement(_partnerNs, "password", self.__password)
 
+
 class PortalLoginRequest(LoginRequest):
     def __init__(self, serverUrl, username, password, orgId, portalId):
         LoginRequest.__init__(self, serverUrl, username, password)
@@ -473,6 +482,7 @@ class PortalLoginRequest(LoginRequest):
         if (not (self.__portalId is None or self.__portalId == "")):
             s.writeStringElement(_partnerNs, "portalId", self.__portalId)
         s.endElement()
+
 
 # base class for all methods that require a sessionId
 class AuthenticatedRequest(SoapEnvelope):
@@ -508,11 +518,12 @@ class AuthenticatedRequest(SoapEnvelope):
             s.writeStringElement(_sobjectNs, "type", sObjects['type'])
             for fn in sObjects.keys():
                 if (fn != 'type'):
-                    if (isinstance(sObjects[fn],dict)):
+                    if (isinstance(sObjects[fn], dict)):
                         self.writeSObjects(s, sObjects[fn], fn)
                     else:
                         s.writeStringElement(_sobjectNs, fn, sObjects[fn])
             s.endElement()
+
 
 class LogoutRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId):
@@ -562,8 +573,8 @@ class GetUpdatedRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, sObjectType, start, end, operationName="getUpdated"):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
         self.__sObjectType = sObjectType
-        self.__start = start;
-        self.__end = end;
+        self.__start = start
+        self.__end = end
 
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType)
@@ -604,10 +615,11 @@ class CreateRequest(UpdateRequest):
 class DeleteRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, ids, operationName="delete"):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
-        self.__ids = ids;
+        self.__ids = ids
 
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "id", self.__ids)
+
 
 class UndeleteRequest(DeleteRequest):
     def __init__(self, serverUrl, sessionId, ids):
@@ -623,7 +635,7 @@ class RetrieveRequest(AuthenticatedRequest):
 
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "fieldList", self.__fields)
-        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType);
+        s.writeStringElement(_partnerNs, "sObjectType", self.__sObjectType)
         s.writeStringElement(_partnerNs, "ids", self.__ids)
 
 
@@ -682,6 +694,7 @@ class DescribeQuickActionsRequest(AuthenticatedRequest):
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "action", self.__actions)
 
+
 class DescribeAvailableQuickActionsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, parentType):
         AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeAvailableQuickActions")
@@ -689,6 +702,7 @@ class DescribeAvailableQuickActionsRequest(AuthenticatedRequest):
 
     def writeBody(self, s):
         s.writeStringElement(_partnerNs, "parentType", self.__parentType)
+
 
 class PerformQuickActionsRequest(AuthenticatedRequest):
     def __init__(self, serverUrl, sessionId, actions):

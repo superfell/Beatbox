@@ -1,14 +1,16 @@
 #!/usr/bin/python
 
-"""soql2atom: a beatbox demo that generates an atom 1.0 formatted feed of any SOQL query (requires beatbox 0.9 or later)
+"""soql2atom: a beatbox demo that generates an atom 1.0 formatted feed of any SOQL query.
 
+   (requires beatbox 0.9 or later)
    The fields Id, SystemModStamp and CreatedDate are automatically added to the SOQL if needed.
-   The first field in the select list becomes the title of the entry, so make sure to setup the order of the fields as you need.
-   The soql should be passed via a 'soql' queryString parameter
+   The first field in the select list becomes the title of the entry, so make sure to setup
+   the order of the fields as you need. The soql should be passed via a 'soql' queryString parameter.
    Optionally, you can also pass a 'title' queryString parameter to set the title of the feed
 
-   The script forces authentication, but many apache installations are configured to block the AUTHORIZATION header,
-   so the script looks for X_HTTP_AUTHORIZATION instead, you can use a mod_rewrite rule to manage the mapping, something like this
+   The script forces authentication, but many apache installations are configured to block
+   the AUTHORIZATION header, so the script looks for X_HTTP_AUTHORIZATION instead, you can
+   use a mod_rewrite rule to manage the mapping, something like this
 
    Options +FollowSymLinks
    RewriteEngine on
@@ -18,20 +20,18 @@
 """
 
 from __future__ import print_function
-__version__ = "1.0"
-__author__ = "Simon Fell"
-__copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
-
 import os
-import sys
 import beatbox
 import cgi
 import cgitb
 from xml.sax.xmlreader import AttributesNSImpl
 import datetime
 from urlparse import urlparse
-import os
 import base64
+
+__version__ = "1.0"
+__author__ = "Simon Fell"
+__copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
 
 cgitb.enable()
 sf = beatbox._tPartnerNS
@@ -41,15 +41,20 @@ if 'SF_SANDBOX' in os.environ:
 
 _noAttrs = beatbox._noAttrs
 
+
 def addRequiredFieldsToSoql(soql):
     findPos = soql.lower().find("from")
     selectList = []
     for f in soql.lower()[:findPos].split(","):
         selectList.append(f.strip())
-    if not "id" in selectList: selectList.append("Id")
-    if not "systemmodstamp" in selectList: selectList.append("systemModStamp")
-    if not "createddate" in selectList: selectList.append("createdDate")
+    if "id" not in selectList:
+        selectList.append("Id")
+    if "systemmodstamp" not in selectList:
+        selectList.append("systemModStamp")
+    if "createddate" not in selectList:
+        selectList.append("createdDate")
     return ', '.join(selectList) + soql[findPos-1:]
+
 
 def soql2atom(loginResult, soql, title):
     soqlWithFields = addRequiredFieldsToSoql(soql)
@@ -65,7 +70,8 @@ def soql2atom(loginResult, soql, title):
 
     print("content-type: application/atom+xml")
     doGzip = "HTTP_ACCEPT_ENCODING" in os.environ and "gzip" in os.environ["HTTP_ACCEPT_ENCODING"].lower().split(',')
-    if (doGzip): print("content-encoding: gzip")
+    if (doGzip):
+        print("content-encoding: gzip")
     print()
     x = beatbox.XmlWriter(doGzip)
     x.startPrefixMapping("a", atom_ns)
@@ -77,14 +83,14 @@ def soql2atom(loginResult, soql, title):
     x.writeStringElement(atom_ns, "name", str(userInfo.userFullName))
     x.endElement()
     x.characters("\n")
-    rel = AttributesNSImpl( {(None, "rel"): "self", (None, "href") : thisUrl},
-                            {(None, "rel"): "rel",  (None, "href"): "href"})
+    rel = AttributesNSImpl({(None, "rel"): "self", (None, "href"): thisUrl},
+                           {(None, "rel"): "rel",  (None, "href"): "href"})
     x.startElement(atom_ns, "link", rel)
     x.endElement()
-    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() +"Z")
+    x.writeStringElement(atom_ns, "updated", datetime.datetime.utcnow().isoformat() + "Z")
     x.writeStringElement(atom_ns, "id", thisUrl + "&userid=" + str(loginResult[beatbox._tPartnerNS.userId]))
     x.characters("\n")
-    type = AttributesNSImpl({(None, u"type") : "html"}, {(None, u"type") : u"type" })
+    type = AttributesNSImpl({(None, u"type"): "html"}, {(None, u"type"): u"type"})
     for row in qr[sf.records:]:
         x.startElement(atom_ns, "entry")
         desc = ""
@@ -102,17 +108,19 @@ def soql2atom(loginResult, soql, title):
                 x.writeStringElement(ent_ns, col._name[1], str(col))
         x.startElement(atom_ns, "content", type)
         x.characters(desc)
-        x.endElement() # content
+        x.endElement()  # content
         x.characters("\n")
-        x.endElement() # entry
-    x.endElement() # feed
+        x.endElement()  # entry
+    x.endElement()  # feed
     print(x.endDocument())
 
+
 def writeLink(x, namespace, localname, rel, type, href):
-    rel = AttributesNSImpl( {(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type },
-                            {(None, "rel"): "rel", (None, "href"): "href", (None, "type"): "type"})
+    rel = AttributesNSImpl({(None, "rel"): rel,   (None, "href"): href,   (None, "type"): type},
+                           {(None, "rel"): "rel", (None, "href"): "href", (None, "type"): "type"})
     x.startElement(namespace, localname, rel)
     x.endElement()
+
 
 def authenticationRequired(message="Unauthorized"):
     print("status: 401 Unauthorized")
@@ -141,4 +149,3 @@ else:
             authenticationRequired(sfe.faultString)
         else:
             raise
-
