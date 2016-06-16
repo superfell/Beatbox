@@ -46,7 +46,7 @@ def makeConnection(scheme, host, timeout=1200):
 class Client:
     def __init__(self):
         self.batchSize = 500
-        self.serverUrl = "https://login.salesforce.com/services/Soap/u/33.0"
+        self.serverUrl = "https://login.salesforce.com/services/Soap/u/36.0"
         self.__conn = None
         self.timeout = 15
 
