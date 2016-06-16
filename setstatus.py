@@ -11,16 +11,16 @@ svc = beatbox.Client()
 
 if __name__ == "__main__":
 
-	if len(sys.argv) != 4:
-		print("usage is setstatus.py <username> <password> <new status>")
-	else:
-		loginResult = svc.login(sys.argv[1], sys.argv[2])
-		print("welcome " + str(loginResult[sf.userInfo][sf.userFullName]))
-		user = { 'type' : 'FeedItem',
-				 'parentId'   	: str(loginResult[sf.userId]),
-				 'body' 		: sys.argv[3] }
-		r = svc.create(user)
-		if (str(r[sf.success]) == 'false'):
-			print("error updating status:" + str(r[sf.errors][sf.statusCode]) + ":" + str(r[sf.errors][sf.message]))
-		else:
-			print("success!")
+    if len(sys.argv) != 4:
+        print("usage is setstatus.py <username> <password> <new status>")
+    else:
+        loginResult = svc.login(sys.argv[1], sys.argv[2])
+        print("welcome " + str(loginResult[sf.userInfo][sf.userFullName]))
+        user = { 'type' : 'FeedItem',
+                 'parentId'     : str(loginResult[sf.userId]),
+                 'body'         : sys.argv[3] }
+        r = svc.create(user)
+        if (str(r[sf.success]) == 'false'):
+            print("error updating status:" + str(r[sf.errors][sf.statusCode]) + ":" + str(r[sf.errors][sf.message]))
+        else:
+            print("success!")
