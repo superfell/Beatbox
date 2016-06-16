@@ -5,6 +5,9 @@ __author__ = "Aaron Swartz"
 __credits__ = "Many thanks to pjz, bitsko, and DanC."
 __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
 
+import re
+from six import PY2, StringIO, text_type
+
 def isstr(f): return isinstance(f, type('')) or isinstance(f, type(u''))
 def islst(f): return isinstance(f, type(())) or isinstance(f, type([]))
 
@@ -16,6 +19,26 @@ def quote(x, elt=True):
     if not elt: x = x.replace('"', '&quot;')
     return x
 
+
+def python_2_unicode_compatible(klass):
+    """
+    A decorator that defines __unicode__ and __str__ methods under Python 2.
+    Under Python 3 it does nothing.
+
+    To support Python 2 and 3 with a single code base, define a __str__ method
+    returning text and apply this decorator to the class.
+    """
+    if PY2:
+        if '__str__' not in klass.__dict__:
+            raise ValueError("@python_2_unicode_compatible cannot be applied "
+                             "to %s because it doesn't define __str__()." %
+                             klass.__name__)
+        klass.__unicode__ = klass.__str__
+        klass.__str__ = lambda self: self.__unicode__().encode('utf-8')
+    return klass
+
+
+@python_2_unicode_compatible
 class Element:
     def __init__(self, name, attrs=None, children=None, prefixes=None):
         if islst(name) and name[0] == None: name = name[1]
@@ -95,14 +118,12 @@ class Element:
 
         return out
 
-    def __unicode__(self):
-        text = ''
-        for x in self._dir:
-            text += unicode(x)
-        return ' '.join(text.split())
-
     def __str__(self):
-        return self.__unicode__().encode('utf-8')
+        text = u''
+        for x in self._dir:
+            # "six.text_type" is unicode in Python 2 and str in Python 3.
+            text += text_type(x)
+        return ' '.join(text.split())
 
     def __getattr__(self, n):
         if n[0] == '_': raise AttributeError("Use foo['{}'] to access the child element.".format(n))
@@ -126,7 +147,7 @@ class Element:
             return self._dir[n]
         elif isinstance(n, slice(0).__class__):
             # numerical slices
-            if isinstance(n.start, type(0)): return self._dir[n.start:n.stop]
+            if isinstance(n.start, type(0)) or n == slice(None): return self._dir[n.start:n.stop]
 
             # d['foo':] == all <foo>s
             n = n.start
@@ -212,7 +233,7 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
         ContentHandler.__init__(self)
 
     def startPrefixMapping(self, prefix, uri):
-        if not self.prefixes.has_key(prefix): self.prefixes[prefix] = []
+        if prefix not in self.prefixes: self.prefixes[prefix] = []
         self.prefixes[prefix].append(uri)
     def endPrefixMapping(self, prefix):
         self.prefixes[prefix].pop()
@@ -255,7 +276,6 @@ def seed(fileobj):
     return seeder.result
 
 def parse(text):
-    from StringIO import StringIO
     return seed(StringIO(text))
 
 def load(url):
@@ -319,8 +339,9 @@ def unittest():
     </doc>""")
 
     assert repr(d) == '<doc version="2.7182818284590451">...</doc>'
-    assert d.__repr__(1) == '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar" version="2.7182818284590451"><author>John Polk and John Palfrey</author><dc:creator>John Polk</dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station="4">Buffy</bbc:show></doc>'
-    assert d.__repr__(1,1) == '<doc xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://example.org/bar" version="2.7182818284590451">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>John Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:show bbc:station="4">Buffy</bbc:show>\n</doc>'
+    # the order of xmlns attributes is not garanteed invariant
+    assert re.match('<doc (?:xmlns(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar") ){3}version="2.7182818284590451"><author>John Polk and John Palfrey</author><dc:creator>John Polk</dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station="4">Buffy</bbc:show></doc>', d.__repr__(1))
+    assert  re.match('<doc (?:xmlns(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar") ){3}version="2.7182818284590451">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>John Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:show bbc:station="4">Buffy</bbc:show>\n</doc>', d.__repr__(1,1))
 
     assert repr(parse("<doc xml:lang='en' />")) == '<doc xml:lang="en"></doc>'
 

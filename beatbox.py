@@ -7,9 +7,9 @@ __credits__ = "Mad shouts to the sforce possie"
 __copyright__ = "(C) 2006-2015 Simon Fell. GNU GPL 2."
 
 import sys
-import httplib
-from urlparse import urlparse
-from StringIO import StringIO
+from six.moves import http_client
+from six.moves.urllib.parse import urlparse
+from six import PY3, BytesIO, text_type
 import gzip
 import datetime
 import xmltramp
@@ -38,8 +38,8 @@ forceHttp=False     # force all connections to be HTTP, for debugging
 def makeConnection(scheme, host, timeout=1200):
     kwargs = {'timeout':timeout}
     if forceHttp or scheme.upper() == 'HTTP':
-        return httplib.HTTPConnection(host, **kwargs)
-    return httplib.HTTPSConnection(host, **kwargs)
+        return http_client.HTTPConnection(host, **kwargs)
+    return http_client.HTTPSConnection(host, **kwargs)
 
 
 # the main sforce client proxy class
@@ -267,20 +267,20 @@ class BeatBoxXmlGenerator(XMLGenerator):
         return self._current_context[name[0]] + ":" + name[1]
 
     def startElementNS(self, name, qname, attrs):
-        self._write(unicode('<' + self.makeName(name)))
+        self._write(text_type('<' + self.makeName(name)))
 
         for pair in self._undeclared_ns_maps:
-            self._write(unicode(' xmlns:%s="%s"' % pair))
+            self._write(text_type(' xmlns:%s="%s"' % pair))
         self._undeclared_ns_maps = []
 
         for (name, value) in attrs.items():
-            self._write(unicode(' %s=%s' % (self.makeName(name), quoteattr(value))))
-        self._write(unicode('>'))
+            self._write(text_type(' %s=%s' % (self.makeName(name), quoteattr(value))))
+        self._write(text_type('>'))
 
 # general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
 class XmlWriter:
     def __init__(self, doGzip):
-        self.__buf = StringIO("")
+        self.__buf = BytesIO()
         if doGzip:
             self.__gzip = gzip.GzipFile(mode='wb', fileobj=self.__buf)
             stm = self.__gzip
@@ -431,10 +431,11 @@ class SoapEnvelope:
         response = conn.getresponse()
         rawResponse = response.read()
         if response.getheader('content-encoding','') == 'gzip':
-            rawResponse = gzip.GzipFile(fileobj=StringIO(rawResponse)).read()
+            rawResponse = gzip.GzipFile(fileobj=BytesIO(rawResponse)).read()
         if close:
             conn.close()
-        tramp = xmltramp.parse(rawResponse)
+        string_response = rawResponse.decode('utf-8') if PY3 else rawResponse
+        tramp = xmltramp.parse(string_response)
         try:
             faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
             faultCode   = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]
