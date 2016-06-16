@@ -1,5 +1,6 @@
 # runs a sforce SOQL query and saves the results as a csv file.
 from __future__ import print_function
+import os
 import sys
 import string
 import beatbox
@@ -7,6 +8,8 @@ import xmltramp
 
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
+if 'SF_SANDBOX' in os.environ:
+    svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
 
 def buildSoql(sobjectName):
     dr = svc.describeSObjects(sobjectName)
@@ -27,7 +30,7 @@ def printColumnHeaders(queryResult):
 
 def export(username, password, objectOrSoql):
     svc.login(username, password)
-    if string.find(objectOrSoql, ' ') < 0:
+    if objectOrSoql.find(' ') < 0:
         soql = buildSoql(objectOrSoql)
     else:
         soql = objectOrSoql

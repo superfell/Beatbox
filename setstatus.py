@@ -1,6 +1,7 @@
 # demonstration of using the BeatBox library to call the sforce API, this will update your chatter status
 
 from __future__ import print_function
+import os
 import sys
 import beatbox
 import xmltramp
@@ -8,6 +9,8 @@ import datetime
 
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
+if 'SF_SANDBOX' in os.environ:
+    svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
 
 if __name__ == "__main__":
 

@@ -8,7 +8,7 @@
    Optionally, you can also pass a 'title' queryString parameter to set the title of the feed
 
    The script forces authentication, but many apache installations are configured to block the AUTHORIZATION header,
-   so the scirpt looks for X_HTTP_AUTHORIZATION instead, you can use a mod_rewrite rule to manage the mapping, something like this
+   so the script looks for X_HTTP_AUTHORIZATION instead, you can use a mod_rewrite rule to manage the mapping, something like this
 
    Options +FollowSymLinks
    RewriteEngine on
@@ -22,6 +22,7 @@ __version__ = "1.0"
 __author__ = "Simon Fell"
 __copyright__ = "(C) 2006 Simon Fell. GNU GPL 2."
 
+import os
 import sys
 import beatbox
 import cgi
@@ -31,22 +32,24 @@ import datetime
 from urlparse import urlparse
 import os
 import base64
-import string
 
 cgitb.enable()
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
+if 'SF_SANDBOX' in os.environ:
+    svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
+
 _noAttrs = beatbox._noAttrs
 
 def addRequiredFieldsToSoql(soql):
-    findPos = string.find(string.lower(soql), "from")
+    findPos = soql.lower().find("from")
     selectList = []
-    for f in string.lower(soql)[:findPos].split(","):
-        selectList.append(string.strip(f))
+    for f in soql.lower()[:findPos].split(","):
+        selectList.append(f.strip())
     if not "id" in selectList: selectList.append("Id")
     if not "systemmodstamp" in selectList: selectList.append("systemModStamp")
     if not "createddate" in selectList: selectList.append("createdDate")
-    return string.join(selectList, ", ") + soql[findPos-1:]
+    return ', '.join(selectList) + soql[findPos-1:]
 
 def soql2atom(loginResult, soql, title):
     soqlWithFields = addRequiredFieldsToSoql(soql)
@@ -61,7 +64,7 @@ def soql2atom(loginResult, soql, title):
     ent_ns = "urn:sobject.enterprise.soap.sforce.com"
 
     print("content-type: application/atom+xml")
-    doGzip = os.environ.has_key("HTTP_ACCEPT_ENCODING") and "gzip" in string.lower(os.environ["HTTP_ACCEPT_ENCODING"]).split(',')
+    doGzip = "HTTP_ACCEPT_ENCODING" in os.environ and "gzip" in os.environ["HTTP_ACCEPT_ENCODING"].lower().split(',')
     if (doGzip): print("content-encoding: gzip")
     print()
     x = beatbox.XmlWriter(doGzip)
@@ -118,21 +121,22 @@ def authenticationRequired(message="Unauthorized"):
     print()
     print(message)
 
-if not os.environ.has_key('X_HTTP_AUTHORIZATION') or os.environ['X_HTTP_AUTHORIZATION'] == '':
+if os.environ.get('X_HTTP_AUTHORIZATION', '') == '':
     authenticationRequired()
 else:
     auth = os.environ['X_HTTP_AUTHORIZATION']
     (username, password) = base64.decodestring(auth.split(" ")[1]).split(':')
     form = cgi.FieldStorage()
-    if not form.has_key('soql'): raise Exception("Must provide the SOQL query to run via the soql queryString parameter")
+    if 'soql' is not form:
+        raise Exception("Must provide the SOQL query to run via the soql queryString parameter")
     soql = form.getvalue("soql")
     title = "SOQL2ATOM : " + soql
-    if form.has_key("title"):
+    if "title" == form:
         title = form.getvalue("title")
     try:
         lr = svc.login(username, password)
         soql2atom(lr, soql, title)
-    except beatbox.SoapFaultError, sfe:
+    except beatbox.SoapFaultError as sfe:
         if (sfe.faultCode == 'INVALID_LOGIN'):
             authenticationRequired(sfe.faultString)
         else:
