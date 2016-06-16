@@ -283,9 +283,6 @@ def load(url):
     return seed(urllib.urlopen(url))
 
 def unittest():
-    parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1,1) == \
-      '<doc>\n\ta<baz>\n\t\tf<b>o</b>ob<b>a</b>r\n\t</baz>a\n</doc>'
-
     assert str(parse("<doc />")) == ""
     assert str(parse("<doc>I <b>love</b> you.</doc>")) == "I love you."
     assert parse("<doc>\nmom\nwow\n</doc>")[0].strip() == "mom\nwow"
@@ -296,12 +293,12 @@ def unittest():
 
     try:
         d._doesnotexist
-        raise Error("Expected Error but found success. Damn.")
+        raise RuntimeError("Expected Error but found success. Damn.")
     except AttributeError: pass
     assert d.bar._name == 'bar'
     try:
         d.doesnotexist
-        raise Error("Expected Error but found success. Damn.")
+        raise RuntimeError("Expected Error but found success. Damn.")
     except AttributeError: pass
 
     assert hasattr(d, 'bar') == True
@@ -342,6 +339,19 @@ def unittest():
     # the order of xmlns attributes is not garanteed invariant
     assert re.match('<doc (?:xmlns(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar") ){3}version="2.7182818284590451"><author>John Polk and John Palfrey</author><dc:creator>John Polk</dc:creator><dc:creator>John Palfrey</dc:creator><bbc:show bbc:station="4">Buffy</bbc:show></doc>', d.__repr__(1))
     assert  re.match('<doc (?:xmlns(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar") ){3}version="2.7182818284590451">\n\t<author>John Polk and John Palfrey</author>\n\t<dc:creator>John Polk</dc:creator>\n\t<dc:creator>John Palfrey</dc:creator>\n\t<bbc:show bbc:station="4">Buffy</bbc:show>\n</doc>', d.__repr__(1,1))
+
+    assert (parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1,1) ==
+            '<doc>\n'
+            '\ta\n'
+            '\t<baz>\n'
+            '\t\tf\n'
+            '\t\t<b>o</b>\n'
+            '\t\tob\n'
+            '\t\t<b>a</b>\n'
+            '\t\tr\n'
+            '\t</baz>\n'
+            '\ta\n'
+            '</doc>')
 
     assert repr(parse("<doc xml:lang='en' />")) == '<doc xml:lang="en"></doc>'
 
