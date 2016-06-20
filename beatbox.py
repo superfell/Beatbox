@@ -450,7 +450,7 @@ class SoapEnvelope(object):
             close = True
         rawRequest = self.makeEnvelope()
         # print(rawRequest)
-        conn.request("POST", path, rawRequest, headers)
+        conn.request("POST", self.serverUrl, rawRequest, headers)
         response = conn.getresponse()
         rawResponse = response.read()
         if response.getheader('content-encoding', '') == 'gzip':
