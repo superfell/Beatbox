@@ -2,11 +2,14 @@
 
 is a minimal dependency python library for accessing the salesforce.com web services API.
 
-Its primary dependency is on xmltramp, a xml parser library that exposes access to the xml document in an easy to use manner.
+Its primary dependency is on xmltramp, an xml parser library that exposes access to the xml document in an easy to use manner.
 
 Beatbox is released under the GPL v2.
 
 [http://www.pocketsoap.com/beatbox/](http://www.pocketsoap.com/beatbox/)
+
+Beatbox requires Python 2.7.9 or later or Python 3.4 or later.
+
 
 ## About TLS 1.2 Support
 
