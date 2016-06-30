@@ -1,9 +1,7 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 from __future__ import print_function
 
-from six.moves import http_client, xrange
-from six.moves.urllib.parse import urlparse
-from six import PY3, BytesIO, text_type
+from beatbox_six import PY3, BytesIO, http_client, text_type, urlparse, xrange
 import gzip
 import datetime
 import xmltramp
