@@ -8,7 +8,7 @@ Beatbox is released under the GPL v2.
 
 [http://www.pocketsoap.com/beatbox/](http://www.pocketsoap.com/beatbox/)
 
-Beatbox requires Python 2.7.9 or later or Python 3.4 or later.
+Beatbox requires Python 2.7.9 or later or Python 3.4 or later. Thanks [hynekcer](https://github.com/hynekcer) for the Python 3 support!
 
 
 ## About TLS 1.2 Support
