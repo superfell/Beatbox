@@ -56,5 +56,15 @@ class TestXmlWriter(unittest.TestCase):
         xml = gz.read()
         self.assertEqual(b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<q:root xmlns:q=\"urn:test\"><q:child>text</q:child></q:root>", xml)
 
+
+def all_tests():
+    """Test suite for setup.py that combines all *unit* tests to one suite."""
+    import xmltramp
+    loader = unittest.defaultTestLoader
+    return unittest.TestSuite([loader.loadTestsFromModule(xmltramp),
+                               loader.loadTestsFromTestCase(TestXmlWriter),
+                               ])
+
+
 if __name__ == '__main__':
     unittest.main()
