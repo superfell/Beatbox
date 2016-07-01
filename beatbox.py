@@ -177,9 +177,6 @@ class Client(object):
     def getUserInfo(self):
         return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "getUserInfo").post(self.__conn)
 
-    # def convertLead(self, convertLeads):
-
-
 class IterClient(Client):
 
     def __init__(self):
