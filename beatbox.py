@@ -46,6 +46,7 @@ class Client(object):
         self.serverUrl = "https://login.salesforce.com/services/Soap/u/36.0"
         self.__conn = None
         self.timeout = 15
+        self.headers = {}
 
     def __del__(self):
         if self.__conn:
@@ -77,50 +78,50 @@ class Client(object):
     # calls logout which invalidates the current sessionId, in general its better to not call this and just
     # let the sessions expire on their own.
     def logout(self):
-        return LogoutRequest(self.__serverUrl, self.sessionId).post(self.__conn, True)
+        return LogoutRequest(self.__serverUrl, self.sessionId, self.headers).post(self.__conn, True)
 
     # set the batchSize property on the Client instance to change the batchsize for query/queryMore
     def query(self, soql):
-        return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql).post(self.__conn)
+        return QueryRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, soql).post(self.__conn)
 
     # query include deleted and archived rows.
     def queryAll(self, soql):
-        return QueryRequest(self.__serverUrl, self.sessionId, self.batchSize, soql, "queryAll").post(self.__conn)
+        return QueryRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, soql, "queryAll").post(self.__conn)
 
     def queryMore(self, queryLocator):
-        return QueryMoreRequest(self.__serverUrl, self.sessionId, self.batchSize, queryLocator).post(self.__conn)
+        return QueryMoreRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, queryLocator).post(self.__conn)
 
     def search(self, sosl):
         return SearchRequest(self.__serverUrl, self.sessionId, sosl).post(self.__conn)
 
     def getUpdated(self, sObjectType, start, end):
-        return GetUpdatedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
+        return GetUpdatedRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType, start, end).post(self.__conn)
 
     def getDeleted(self, sObjectType, start, end):
-        return GetDeletedRequest(self.__serverUrl, self.sessionId, sObjectType, start, end).post(self.__conn)
+        return GetDeletedRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType, start, end).post(self.__conn)
 
     def retrieve(self, fields, sObjectType, ids):
-        return RetrieveRequest(self.__serverUrl, self.sessionId, fields, sObjectType, ids).post(self.__conn)
+        return RetrieveRequest(self.__serverUrl, self.sessionId, self.headers, fields, sObjectType, ids).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single save result or a list
     def create(self, sObjects):
-        return CreateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
+        return CreateRequest(self.__serverUrl, self.sessionId, self.headers, sObjects).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single save result or a list
     def update(self, sObjects):
-        return UpdateRequest(self.__serverUrl, self.sessionId, sObjects).post(self.__conn)
+        return UpdateRequest(self.__serverUrl, self.sessionId, self.headers, sObjects).post(self.__conn)
 
     # sObjects can be 1 or a list, returns a single upsert result or a list
     def upsert(self, externalIdName, sObjects):
-        return UpsertRequest(self.__serverUrl, self.sessionId, externalIdName, sObjects).post(self.__conn)
+        return UpsertRequest(self.__serverUrl, self.sessionId, self.headers, externalIdName, sObjects).post(self.__conn)
 
     # ids can be 1 or a list, returns a single delete result or a list
     def delete(self, ids):
-        return DeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
+        return DeleteRequest(self.__serverUrl, self.sessionId, self.headers, ids).post(self.__conn)
 
     # ids can be 1 or a list, returns a single delete result or a list
     def undelete(self, ids):
-        return UndeleteRequest(self.__serverUrl, self.sessionId, ids).post(self.__conn)
+        return UndeleteRequest(self.__serverUrl, self.sessionId, self.headers, ids).post(self.__conn)
 
     # leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per
     # the LeadConvert type in the WSDL.
@@ -134,47 +135,47 @@ class Client(object):
     #   <element name="ownerId"                type="tns:ID"     nillable="true"/>
     #   <element name="sendNotificationEmail"  type="xsd:boolean"/>
     def convertLead(self, leadConverts):
-        return ConvertLeadRequest(self.__serverUrl, self.sessionId, leadConverts).post(self.__conn)
+        return ConvertLeadRequest(self.__serverUrl, self.sessionId, self.headers, leadConverts).post(self.__conn)
 
     # sObjectTypes can be 1 or a list, returns a single describe result or a list of them
     def describeSObjects(self, sObjectTypes):
-        return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, sObjectTypes).post(self.__conn)
+        return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, self.headers, sObjectTypes).post(self.__conn)
 
     def describeGlobal(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeGlobal").post(self.__conn)
+        return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "describeGlobal").post(self.__conn)
 
     def describeLayout(self, sObjectType):
-        return DescribeLayoutRequest(self.__serverUrl, self.sessionId, sObjectType).post(self.__conn)
+        return DescribeLayoutRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType).post(self.__conn)
 
     def describeTabs(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeTabs").post(self.__conn, True)
+        return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "describeTabs").post(self.__conn, True)
 
     def describeSearchScopeOrder(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "describeSearchScopeOrder"
+        return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "describeSearchScopeOrder"
                                     ).post(self.__conn, True)
 
     def describeQuickActions(self, actions):
-        return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
+        return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, actions).post(self.__conn, True)
 
-    def describeAvailableQuickActions(self, parentType=None):
-        return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, parentType
+    def describeAvailableQuickActions(self, parentType = None):
+        return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, parentType
                                                     ).post(self.__conn, True)
 
     def performQuickActions(self, actions):
-        return PerformQuickActionsRequest(self.__serverUrl, self.sessionId, actions).post(self.__conn, True)
+        return PerformQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, actions).post(self.__conn, True)
 
     def getServerTimestamp(self):
-        return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, "getServerTimestamp"
+        return str(AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "getServerTimestamp"
                                         ).post(self.__conn)[_tPartnerNS.timestamp])
 
     def resetPassword(self, userId):
-        return ResetPasswordRequest(self.__serverUrl, self.sessionId, userId).post(self.__conn)
+        return ResetPasswordRequest(self.__serverUrl, self.sessionId, self.headers, userId).post(self.__conn)
 
     def setPassword(self, userId, password):
-        SetPasswordRequest(self.__serverUrl, self.sessionId, userId, password).post(self.__conn)
+        SetPasswordRequest(self.__serverUrl, self.sessionId, self.headers, userId, password).post(self.__conn)
 
     def getUserInfo(self):
-        return AuthenticatedRequest(self.__serverUrl, self.sessionId, "getUserInfo").post(self.__conn)
+        return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "getUserInfo").post(self.__conn)
 
     # def convertLead(self, convertLeads):
 
@@ -484,14 +485,20 @@ class PortalLoginRequest(LoginRequest):
 
 # base class for all methods that require a sessionId
 class AuthenticatedRequest(SoapEnvelope):
-    def __init__(self, serverUrl, sessionId, operationName):
+    def __init__(self, serverUrl, sessionId, headers, operationName):
         SoapEnvelope.__init__(self, serverUrl, operationName)
         self.sessionId = sessionId
+        self.headers = headers
 
     def writeHeaders(self, s):
         s.startElement(_partnerNs, "SessionHeader")
         s.writeStringElement(_partnerNs, "sessionId", self.sessionId)
         s.endElement()
+        for headerName, headerFields in self.headers.iteritems():
+            s.startElement(_partnerNs, headerName)
+            for key, value in headerFields.iteritems():
+                s.writeStringElement(_partnerNs, key, value)
+            s.endElement()
 
     def writeDict(self, s, elemName, d):
         if islst(d):
@@ -524,13 +531,13 @@ class AuthenticatedRequest(SoapEnvelope):
 
 
 class LogoutRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "logout")
+    def __init__(self, serverUrl, sessionId, headers):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "logout")
 
 
 class QueryOptionsRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, batchSize, operationName):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+    def __init__(self, serverUrl, sessionId, headers, batchSize, operationName):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, operationName)
         self.batchSize = batchSize
 
     def writeHeaders(self, s):
@@ -541,8 +548,8 @@ class QueryOptionsRequest(AuthenticatedRequest):
 
 
 class QueryRequest(QueryOptionsRequest):
-    def __init__(self, serverUrl, sessionId, batchSize, soql, operationName="query"):
-        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, operationName)
+    def __init__(self, serverUrl, sessionId, headers, batchSize, soql, operationName="query"):
+        QueryOptionsRequest.__init__(self, serverUrl, sessionId, headers, batchSize, operationName)
         self.__query = soql
 
     def writeBody(self, s):
@@ -550,8 +557,8 @@ class QueryRequest(QueryOptionsRequest):
 
 
 class QueryMoreRequest(QueryOptionsRequest):
-    def __init__(self, serverUrl, sessionId, batchSize, queryLocator):
-        QueryOptionsRequest.__init__(self, serverUrl, sessionId, batchSize, "queryMore")
+    def __init__(self, serverUrl, sessionId, headers, batchSize, queryLocator):
+        QueryOptionsRequest.__init__(self, serverUrl, sessionId, headers, batchSize, "queryMore")
         self.__queryLocator = queryLocator
 
     def writeBody(self, s):
@@ -559,8 +566,8 @@ class QueryMoreRequest(QueryOptionsRequest):
 
 
 class SearchRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, sosl):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "search")
+    def __init__(self, serverUrl, sessionId, headers, sosl):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "search")
         self.__query = sosl
 
     def writeBody(self, s):
@@ -568,8 +575,8 @@ class SearchRequest(AuthenticatedRequest):
 
 
 class GetUpdatedRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, sObjectType, start, end, operationName="getUpdated"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+    def __init__(self, serverUrl, sessionId, headers, sObjectType, start, end, operationName="getUpdated"):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, operationName)
         self.__sObjectType = sObjectType
         self.__start = start
         self.__end = end
@@ -581,13 +588,13 @@ class GetUpdatedRequest(AuthenticatedRequest):
 
 
 class GetDeletedRequest(GetUpdatedRequest):
-    def __init__(self, serverUrl, sessionId, sObjectType, start, end):
-        GetUpdatedRequest.__init__(self, serverUrl, sessionId, sObjectType, start, end, "getDeleted")
+    def __init__(self, serverUrl, sessionId, headers, sObjectType, start, end):
+        GetUpdatedRequest.__init__(self, serverUrl, sessionId, headers, sObjectType, start, end, "getDeleted")
 
 
 class UpsertRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, externalIdName, sObjects):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "upsert")
+    def __init__(self, serverUrl, sessionId, headers, externalIdName, sObjects):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "upsert")
         self.__externalIdName = externalIdName
         self.__sObjects = sObjects
 
@@ -597,8 +604,8 @@ class UpsertRequest(AuthenticatedRequest):
 
 
 class UpdateRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, sObjects, operationName="update"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+    def __init__(self, serverUrl, sessionId, headers, sObjects, operationName="update"):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, operationName)
         self.__sObjects = sObjects
 
     def writeBody(self, s):
@@ -606,13 +613,13 @@ class UpdateRequest(AuthenticatedRequest):
 
 
 class CreateRequest(UpdateRequest):
-    def __init__(self, serverUrl, sessionId, sObjects):
-        UpdateRequest.__init__(self, serverUrl, sessionId, sObjects, "create")
+    def __init__(self, serverUrl, sessionId, headers, sObjects):
+        UpdateRequest.__init__(self, serverUrl, sessionId, headers, sObjects, "create")
 
 
 class DeleteRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, ids, operationName="delete"):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, operationName)
+    def __init__(self, serverUrl, sessionId, headers, ids, operationName="delete"):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, operationName)
         self.__ids = ids
 
     def writeBody(self, s):
@@ -620,13 +627,13 @@ class DeleteRequest(AuthenticatedRequest):
 
 
 class UndeleteRequest(DeleteRequest):
-    def __init__(self, serverUrl, sessionId, ids):
-        DeleteRequest.__init__(self, serverUrl, sessionId, ids, "undelete")
+    def __init__(self, serverUrl, sessionId, headers, ids):
+        DeleteRequest.__init__(self, serverUrl, sessionId, headers, ids, "undelete")
 
 
 class RetrieveRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, fields, sObjectType, ids):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "retrieve")
+    def __init__(self, serverUrl, sessionId, headers, fields, sObjectType, ids):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "retrieve")
         self.__fields = fields
         self.__sObjectType = sObjectType
         self.__ids = ids
@@ -638,8 +645,8 @@ class RetrieveRequest(AuthenticatedRequest):
 
 
 class ResetPasswordRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, userId):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "resetPassword")
+    def __init__(self, serverUrl, sessionId, headers, userId):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "resetPassword")
         self.__userId = userId
 
     def writeBody(self, s):
@@ -647,8 +654,8 @@ class ResetPasswordRequest(AuthenticatedRequest):
 
 
 class SetPasswordRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, userId, password):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "setPassword")
+    def __init__(self, serverUrl, sessionId, headers, userId, password):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "setPassword")
         self.__userId = userId
         self.__password = password
 
@@ -658,8 +665,8 @@ class SetPasswordRequest(AuthenticatedRequest):
 
 
 class ConvertLeadRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, leadConverts):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "convertLead")
+    def __init__(self, serverUrl, sessionId, headers, leadConverts):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "convertLead")
         self.__leads = leadConverts
 
     def writeBody(self, s):
@@ -667,8 +674,8 @@ class ConvertLeadRequest(AuthenticatedRequest):
 
 
 class DescribeSObjectsRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, sObjectTypes):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeSObjects")
+    def __init__(self, serverUrl, sessionId, headers, sObjectTypes):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "describeSObjects")
         self.__sObjectTypes = sObjectTypes
 
     def writeBody(self, s):
@@ -676,8 +683,8 @@ class DescribeSObjectsRequest(AuthenticatedRequest):
 
 
 class DescribeLayoutRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, sObjectType):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeLayout")
+    def __init__(self, serverUrl, sessionId, headers, sObjectType):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "describeLayout")
         self.__sObjectType = sObjectType
 
     def writeBody(self, s):
@@ -685,8 +692,8 @@ class DescribeLayoutRequest(AuthenticatedRequest):
 
 
 class DescribeQuickActionsRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, actions):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeQuickActions")
+    def __init__(self, serverUrl, sessionId, headers, actions):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "describeQuickActions")
         self.__actions = actions
 
     def writeBody(self, s):
@@ -694,8 +701,8 @@ class DescribeQuickActionsRequest(AuthenticatedRequest):
 
 
 class DescribeAvailableQuickActionsRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, parentType):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "describeAvailableQuickActions")
+    def __init__(self, serverUrl, sessionId, headers, parentType):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "describeAvailableQuickActions")
         self.__parentType = parentType
 
     def writeBody(self, s):
@@ -703,8 +710,8 @@ class DescribeAvailableQuickActionsRequest(AuthenticatedRequest):
 
 
 class PerformQuickActionsRequest(AuthenticatedRequest):
-    def __init__(self, serverUrl, sessionId, actions):
-        AuthenticatedRequest.__init__(self, serverUrl, sessionId, "performQuickActions")
+    def __init__(self, serverUrl, sessionId, headers, actions):
+        AuthenticatedRequest.__init__(self, serverUrl, sessionId, headers, "performQuickActions")
         self.__actions = actions
 
     def writeBody(self, s):
