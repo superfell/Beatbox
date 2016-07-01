@@ -494,9 +494,9 @@ class AuthenticatedRequest(SoapEnvelope):
         s.startElement(_partnerNs, "SessionHeader")
         s.writeStringElement(_partnerNs, "sessionId", self.sessionId)
         s.endElement()
-        for headerName, headerFields in self.headers.iteritems():
+        for headerName, headerFields in self.headers.items():
             s.startElement(_partnerNs, headerName)
-            for key, value in headerFields.iteritems():
+            for key, value in headerFields.items():
                 s.writeStringElement(_partnerNs, key, value)
             s.endElement()
 
