@@ -92,7 +92,7 @@ class Client(object):
         return QueryMoreRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, queryLocator).post(self.__conn)
 
     def search(self, sosl):
-        return SearchRequest(self.__serverUrl, self.sessionId, sosl).post(self.__conn)
+        return SearchRequest(self.__serverUrl, self.sessionId, self.headers, sosl).post(self.__conn)
 
     def getUpdated(self, sObjectType, start, end):
         return GetUpdatedRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType, start, end).post(self.__conn)
