@@ -1,4 +1,4 @@
-# Beatbox 
+# Beatbox ![build status](https://travis-ci.org/superfell/Beatbox.svg?branch=master)
 
 is a minimal dependency python library for accessing the salesforce.com web services API.
 
