@@ -2,7 +2,8 @@ import unittest
 import beatbox
 import datetime
 import gzip
-from beatbox_six import BytesIO
+import xmltramp
+from beatbox_six import BytesIO, PY3
 
 class TestXmlWriter(unittest.TestCase):
 
@@ -57,12 +58,47 @@ class TestXmlWriter(unittest.TestCase):
         self.assertEqual(b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<q:root xmlns:q=\"urn:test\"><q:child>text</q:child></q:root>", xml)
 
 
+soapEnvElement = (b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    b"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\""
+    b" xmlns:p=\"urn:partner.soap.sforce.com\""
+    b" xmlns:o=\"urn:sobject.partner.soap.sforce.com\""
+    b" xmlns:x=\"http://www.w3.org/2001/XMLSchema-instance\">")
+
+class TestSoapWriter(unittest.TestCase):
+
+    def setUp(self):
+        beatbox.gzipRequest = False
+
+    def test_xsiNil(self):
+        w = beatbox.SoapWriter()
+        w.writeStringElement("http://schemas.xmlsoap.org/soap/envelope/", "Body", None)
+        xml = w.endDocument()
+        self.assertEqual(soapEnvElement +
+            b"<s:Body x:nil=\"true\"></s:Body>" +
+            b"</s:Envelope>", xml)
+
+    def test_xsiNilWithAtttrs(self):
+        w = beatbox.SoapWriter()
+        a = {(beatbox._envNs, "mustUnderstand"): "1"}
+        w.writeStringElement("http://schemas.xmlsoap.org/soap/envelope/", "Header", None, a)
+        xml = w.endDocument()
+        # because attributes aren't ordered, we can't do a simple sting assert check here
+        # we need to actually parse and verify the xml that way
+        xml_str = xml.decode('utf-8') if PY3 else xml
+        root = xmltramp.parse(xml_str)
+        hdr = root[0]
+        soapNs = xmltramp.Namespace("http://schemas.xmlsoap.org/soap/envelope/")
+        xsiNs = xmltramp.Namespace("http://www.w3.org/2001/XMLSchema-instance")
+        self.assertEqual("1", hdr(soapNs.mustUnderstand))
+        self.assertEqual("true", hdr(xsiNs.nil))
+
 def all_tests():
     """Test suite for setup.py that combines all *unit* tests to one suite."""
     import xmltramp
     loader = unittest.defaultTestLoader
     return unittest.TestSuite([loader.loadTestsFromModule(xmltramp),
                                loader.loadTestsFromTestCase(TestXmlWriter),
+                               loader.loadTestsFromTestCase(TestSoapWriter)
                                ])
 
 
