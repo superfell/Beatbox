@@ -167,6 +167,11 @@ class BeatBoxDemo:
             else:
                 print("<null>")
 
+    def retrieve_by_iterclient(self):
+        print("\nretrieve by IterClient")
+        accounts = svc.iterclient.retrieve("id, name", "Account", self.__theIds)
+        for acc in accounts:
+            print(str(acc[beatbox._tSObjectNS.Id]) + " : " + str(acc[beatbox._tSObjectNS.Name]))
 
     def getUserInfo(self):
         print("\ngetUserInfo")
@@ -245,5 +250,6 @@ if __name__ == "__main__":
         demo.queryAll()
         demo.undelete()
         demo.retrieve()
+        demo.retrieve_by_iterclient()
         demo.search()
 

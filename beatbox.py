@@ -178,6 +178,14 @@ class Client(object):
     def getUserInfo(self):
         return AuthenticatedRequest(self.__serverUrl, self.sessionId, self.headers, "getUserInfo").post(self.__conn)
 
+    @property
+    def iterclient(self):
+        """Easy access to IterClient methods"""
+        client = IterClient()
+        vars(client).update(vars(self))
+        return client
+
+
 class IterClient(Client):
 
     def __init__(self):
