@@ -100,6 +100,7 @@ class Client(object):
     def getDeleted(self, sObjectType, start, end):
         return GetDeletedRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType, start, end).post(self.__conn)
 
+    # ids can be 1 or a list, returns a single save result or a list
     def retrieve(self, fields, sObjectType, ids):
         return RetrieveRequest(self.__serverUrl, self.sessionId, self.headers, fields, sObjectType, ids).post(self.__conn)
 
@@ -205,6 +206,16 @@ class IterClient(Client):
 
     def queryAll(self, soql):
         return self.gatherRecords(super(IterClient, self).queryAll(soql))
+
+    # ids can be 1 or a list, returns a single save result or a list
+    def retrieve(self, fields, sObjectType, ids, chunkLength=None):
+        for chunk in self.chunkRequests(ids, chunkLength=chunkLength):
+            if len(chunk) == 1:
+                responses = [super(IterClient, self).retrieve(fields, sObjectType, chunk)]
+            else:
+                responses = super(IterClient, self).retrieve(fields, sObjectType, chunk)
+            for response in responses:
+                yield response
 
     def create(self, sObjects, chunkLength=None):
         for chunk in self.chunkRequests(sObjects, chunkLength=chunkLength):
