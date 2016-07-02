@@ -92,13 +92,29 @@ class TestSoapWriter(unittest.TestCase):
         self.assertEqual("1", hdr(soapNs.mustUnderstand))
         self.assertEqual("true", hdr(xsiNs.nil))
 
+class TestSoapEnvelope(unittest.TestCase):
+
+    def setUp(self):
+        beatbox.gzipRequest = False
+
+    def test_makeEnvelope(self):
+        e = beatbox.SoapEnvelope("http://localhost", "bob", "Beatbox/0.96")
+        env = e.makeEnvelope()
+        self.assertEqual(soapEnvElement +
+            b"<s:Header>\n" +
+            b"<p:CallOptions><p:client>Beatbox/0.96</p:client></p:CallOptions>\n" +
+            b"</s:Header><s:Body>\n" +
+            b"<p:bob></p:bob>" +
+            b"</s:Body></s:Envelope>", env)
+
 def all_tests():
     """Test suite for setup.py that combines all *unit* tests to one suite."""
     import xmltramp
     loader = unittest.defaultTestLoader
     return unittest.TestSuite([loader.loadTestsFromModule(xmltramp),
                                loader.loadTestsFromTestCase(TestXmlWriter),
-                               loader.loadTestsFromTestCase(TestSoapWriter)
+                               loader.loadTestsFromTestCase(TestSoapWriter),
+                               loader.loadTestsFromTestCase(TestSoapEnvelope)
                                ])
 
 
