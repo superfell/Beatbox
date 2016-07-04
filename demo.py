@@ -71,6 +71,9 @@ class BeatBoxDemo:
             print(str(r[0]) + "\t: " + str(r[2]))
 
     def upsert(self):
+        if not any(f[sf.name] == 'ChandlerId__c' for f in svc.describeSObjects("Task")[sf.fields:]):
+            print("Skipped 'upsert' because the custom external Id field doesn't exist")
+            return
         print("\nupsert")
         t = { 'type': 'Task',
               'ChandlerId__c': '12345',
@@ -98,6 +101,9 @@ class BeatBoxDemo:
               'Id':   self.__idToDelete,
               'Name': 'BeatBoxBaby',
               'NumberofLocations__c': 123.456 }
+        if not any(f[sf.name] == 'NumberofLocations__c' for f in svc.describeSObjects("Account")[sf.fields:]):
+            del a['NumberofLocations__c']
+            print("Skipped a custom field NumberofLocations__c that doesn't exist")
         sr = svc.update(a)
 
         if str(sr[sf.success]) == 'true':
@@ -153,12 +159,19 @@ class BeatBoxDemo:
     def retrieve(self):
         print("\nretrieve")
         accounts = svc.retrieve("id, name", "Account", self.__theIds)
+        if not beatbox.islst(accounts):
+            accounts = [accounts]
         for acc in accounts:
             if len(acc._dir) > 0:
                 print(str(acc[beatbox._tSObjectNS.Id]) + " : " + str(acc[beatbox._tSObjectNS.Name]))
             else:
                 print("<null>")
 
+    def retrieve_by_iterclient(self):
+        print("\nretrieve by IterClient")
+        accounts = svc.iterclient.retrieve("id, name", "Account", self.__theIds)
+        for acc in accounts:
+            print(str(acc[beatbox._tSObjectNS.Id]) + " : " + str(acc[beatbox._tSObjectNS.Name]))
 
     def getUserInfo(self):
         print("\ngetUserInfo")
@@ -237,5 +250,6 @@ if __name__ == "__main__":
         demo.queryAll()
         demo.undelete()
         demo.retrieve()
+        demo.retrieve_by_iterclient()
         demo.search()
 
