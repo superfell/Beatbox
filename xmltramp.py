@@ -2,10 +2,11 @@
 
 import re
 import unittest
-from beatbox_six import python_2_unicode_compatible, StringIO, text_type, xrange
+from io import BytesIO
 from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
 from xml.sax import make_parser
 from xml.sax.handler import feature_namespaces
+from beatbox_six import python_2_unicode_compatible, StringIO, text_type, xrange
 
 __version__ = "2.18"
 __author__ = "Aaron Swartz"
@@ -14,11 +15,11 @@ __copyright__ = "(C) 2003-2006 Aaron Swartz. GNU GPL 2."
 
 
 def isstr(f):
-    return isinstance(f, type('')) or isinstance(f, type(u''))
+    return isinstance(f, str) or isinstance(f, text_type)
 
 
 def islst(f):
-    return isinstance(f, type(())) or isinstance(f, type([]))
+    return isinstance(f, tuple) or isinstance(f, list)
 
 
 empty = {'http://www.w3.org/1999/xhtml':
@@ -89,7 +90,7 @@ class Element(object):
 
             return out
 
-        inprefixes = inprefixes or {u'http://www.w3.org/XML/1998/namespace': 'xml'}
+        inprefixes = inprefixes or {'http://www.w3.org/XML/1998/namespace': 'xml'}
 
         # need to call first to set inprefixes:
         attributes = arep(self._attrs, inprefixes, recursive)
@@ -294,6 +295,8 @@ class Seeder(EntityResolver, DTDHandler, ContentHandler, ErrorHandler):
         self.stack.append(Element(name, attrs, prefixes=newprefixes.copy()))
 
     def characters(self, ch):
+        # This is called only by sax (never directly) and the string ch is
+        # everytimes converted to text_type (unicode) by sax.
         self.ch += ch
 
     def endElementNS(self, name, qname):
@@ -319,7 +322,11 @@ def seed(fileobj):
 
 
 def parse(text):
-    return seed(StringIO(text))
+    """Parse XML to tree of Element.
+
+    text: XML in unicode or byte string
+    """
+    return seed(StringIO(text) if isinstance(text, text_type) else BytesIO(text))
 
 
 def load(url):

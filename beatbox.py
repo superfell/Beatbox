@@ -457,8 +457,7 @@ class SoapEnvelope(object):
             rawResponse = gzip.GzipFile(fileobj=BytesIO(rawResponse)).read()
         if close:
             conn.close()
-        string_response = rawResponse.decode('utf-8') if PY3 else rawResponse
-        tramp = xmltramp.parse(string_response)
+        tramp = xmltramp.parse(raw_response)
         try:
             faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
             faultCode = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]

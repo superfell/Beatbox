@@ -3,7 +3,7 @@ import beatbox
 import datetime
 import gzip
 import xmltramp
-from beatbox_six import BytesIO, PY3
+from beatbox_six import BytesIO
 
 class TestXmlWriter(unittest.TestCase):
 
@@ -84,8 +84,7 @@ class TestSoapWriter(unittest.TestCase):
         xml = w.endDocument()
         # because attributes aren't ordered, we can't do a simple sting assert check here
         # we need to actually parse and verify the xml that way
-        xml_str = xml.decode('utf-8') if PY3 else xml
-        root = xmltramp.parse(xml_str)
+        root = xmltramp.parse(xml)
         hdr = root[0]
         soapNs = xmltramp.Namespace("http://schemas.xmlsoap.org/soap/envelope/")
         xsiNs = xmltramp.Namespace("http://www.w3.org/2001/XMLSchema-instance")
