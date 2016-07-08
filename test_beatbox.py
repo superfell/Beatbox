@@ -20,6 +20,17 @@ class TestXmlWriter(unittest.TestCase):
         xml = self.w.endDocument()
         self.assertEqual(b'<?xml version="1.0" encoding="utf-8"?>\n<q:root xmlns:q="urn:test"><q:child>text</q:child></q:root>', xml)
 
+    def test_mixedUnicode(self):
+        self.w.startElement(u"urn:test", u"child")
+        self.w.characters(u"text A acute \u00c1.")
+        self.w.characters(b"text A acute \xc3\x81.")
+        self.w.endElement()
+        self.w.endElement()
+        xml = self.w.endDocument()
+        self.assertEqual(b'<?xml version="1.0" encoding="utf-8"?>\n<q:root xmlns:q="urn:test"><q:child>'
+                         b'text A acute \xc3\x81.'
+                         b'text A acute \xc3\x81.</q:child></q:root>', xml)
+
     def test_writeStringElementList(self):
         self.w.writeStringElement("urn:test", "child", ["a","b"])
         self.w.endElement()
