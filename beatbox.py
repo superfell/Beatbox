@@ -457,7 +457,7 @@ class SoapEnvelope(object):
             rawResponse = gzip.GzipFile(fileobj=BytesIO(rawResponse)).read()
         if close:
             conn.close()
-        tramp = xmltramp.parse(raw_response)
+        tramp = xmltramp.parse(rawResponse)
         try:
             faultString = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultstring)
             faultCode = str(tramp[_tSoapNS.Body][_tSoapNS.Fault].faultcode).split(':')[-1]
