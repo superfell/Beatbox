@@ -159,11 +159,11 @@ class Element(object):
             self[n] = v
 
     def __getitem__(self, n):
-        if isinstance(n, type(0)):  # d[1] == d._dir[1]
+        if isinstance(n, int):  # d[1] == d._dir[1]
             return self._dir[n]
-        elif isinstance(n, slice(0).__class__):
+        elif isinstance(n, slice):
             # numerical slices
-            if isinstance(n.start, type(0)) or n == slice(None):
+            if isinstance(n.start, int) or n == slice(None):
                 return self._dir[n.start:n.stop]
 
             # d['foo':] == all <foo>s
@@ -184,9 +184,9 @@ class Element(object):
             raise KeyError(n)
 
     def __setitem__(self, n, v):
-        if isinstance(n, type(0)):  # d[1]
+        if isinstance(n, int):  # d[1]
             self._dir[n] = v
-        elif isinstance(n, slice(0).__class__):
+        elif isinstance(n, slice):
             # d['foo':] adds a new foo
             n = n.start
             if self._dNS and not islst(n):
@@ -216,11 +216,10 @@ class Element(object):
             for i in sorted(todel, reverse=True):
                 del self[i]
 
-    # this was completely invalid
     def __delitem__(self, n):
-        if isinstance(n, type(0)):
+        if isinstance(n, int):
             del self._dir[n]
-        elif isinstance(n, slice(0).__class__):
+        elif isinstance(n, slice):
             # delete all <foo>s
             n = n.start
             if self._dNS and not islst(n):
