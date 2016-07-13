@@ -1,7 +1,7 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
 from __future__ import print_function
 
-from beatbox_six import PY3, BytesIO, http_client, text_type, urlparse, xrange
+from beatbox_six import BytesIO, http_client, text_type, urlparse, xrange
 import gzip
 import datetime
 import xmltramp
@@ -158,7 +158,7 @@ class Client(object):
     def describeQuickActions(self, actions):
         return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, actions).post(self.__conn, True)
 
-    def describeAvailableQuickActions(self, parentType = None):
+    def describeAvailableQuickActions(self, parentType=None):
         return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, parentType
                                                     ).post(self.__conn, True)
 
@@ -437,7 +437,7 @@ class SoapEnvelope(object):
     #   returns the relevant result from the body child
     def post(self, conn=None, alwaysReturnList=False):
         headers = {"User-Agent": "BeatBox/" + __version__,
-                   "SOAPAction": "\"\"",
+                   "SOAPAction": '""',
                    "Content-Type": "text/xml; charset=utf-8"}
         if gzipResponse:
             headers['accept-encoding'] = 'gzip'

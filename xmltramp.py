@@ -332,9 +332,10 @@ def load(url):
     import urllib
     return seed(urllib.urlopen(url))
 
+
 class XmlTrampTests(unittest.TestCase):
     def test_str(self):
-        self.assertEqual(str(parse("<doc />")),"")
+        self.assertEqual(str(parse("<doc />")), "")
         self.assertEqual(str(parse("<doc>I <b>love</b> you.</doc>")), "I love you.")
         self.assertEqual(parse("<doc>\nmom\nwow\n</doc>")[0].strip(), "mom\nwow")
         self.assertEqual(str(parse('<bing>  <bang> <bong>center</bong> </bang>  </bing>')), "center")
@@ -361,7 +362,7 @@ class XmlTrampTests(unittest.TestCase):
 
         self.assertEqual(d('foo'), 'bar')
         d(silly='yes')
-        self.assertEqual(d('silly'),'yes')
+        self.assertEqual(d('silly'), 'yes')
         self.assertEqual(d(), d._attrs)
 
         self.assertEqual(d[0], 'hit with a')
@@ -418,7 +419,8 @@ class XmlTrampTests(unittest.TestCase):
                 '</doc>',
                 )
 
-        self.assertEqual(parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1,1),
+        self.assertEqual(
+                parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1, 1),
                 '<doc>\n'
                 '\ta\n'
                 '\t<baz>\n'
@@ -468,11 +470,11 @@ class XmlTrampTests(unittest.TestCase):
 
         self.assertEqual(quote("]]>"), "]]&gt;")
         self.assertEqual(quote('< dkdkdsd dkd sksdksdfsd fsdfdsf]]> kfdfkg >'),
-                '&lt; dkdkdsd dkd sksdksdfsd fsdfdsf]]&gt; kfdfkg >')
+                         '&lt; dkdkdsd dkd sksdksdfsd fsdfdsf]]&gt; kfdfkg >')
 
         self.assertEqual(parse('<x a="&lt;"></x>').__repr__(1), '<x a="&lt;"></x>')
         self.assertEqual(parse('<a xmlns="http://a"><b xmlns="http://b"/></a>').__repr__(1),
-                '<a xmlns="http://a"><b xmlns="http://b"></b></a>')
+                         '<a xmlns="http://a"><b xmlns="http://b"></b></a>')
 
 if __name__ == '__main__':
     unittest.main()

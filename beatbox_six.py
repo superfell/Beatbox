@@ -7,7 +7,7 @@ import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-from io import BytesIO
+from io import BytesIO  # NOQA
 if PY3:
     from builtins import range as xrange
     from io import StringIO
@@ -19,7 +19,9 @@ else:
     from StringIO import StringIO
     import httplib as http_client
     from urlparse import urlparse
-    text_type = unicode
+    text_type = unicode  # NOQA
+
+__all__ = ('BytesIO', 'StringIO', 'xrange', 'http_client', 'urlparse', 'text_type')
 
 
 def python_2_unicode_compatible(klass):
