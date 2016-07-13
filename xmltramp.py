@@ -1,6 +1,5 @@
 """xmltramp: Make XML documents easily accessible."""
 
-import re
 import unittest
 from io import BytesIO
 from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
@@ -75,7 +74,7 @@ class Element(object):
         def arep(a, inprefixes, addns=1):
             out = ''
 
-            for p in self._prefixes.keys():
+            for p in sorted(self._prefixes.keys()):
                 if p not in inprefixes.keys():
                     if addns:
                         out += ' xmlns'
@@ -85,7 +84,7 @@ class Element(object):
                         out += '="{}"'.format(quote(p, False))
                     inprefixes[p] = self._prefixes[p]
 
-            for k in a.keys():
+            for k in sorted(a.keys()):
                 out += ' ' + qname(k, inprefixes) + '="' + quote(a[k], False) + '"'
 
             return out
@@ -396,27 +395,28 @@ class XmlTrampTests(unittest.TestCase):
 
         self.assertEqual(repr(d), '<doc version="2.7182818284590451">...</doc>')
         # the order of xmlns attributes is not garanteed invariant
-        self.assertTrue(re.match(
-                '<doc (?:xmlns'
-                '(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar")'
-                ' ){3}'
-                'version="2.7182818284590451">'
+        self.assertEqual(
+                d.__repr__(1),
+                '<doc xmlns="http://example.org/bar" xmlns:bbc="http://example.org/bbc"'
+                ' xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                ' version="2.7182818284590451">'
                 '<author>John Polk and John Palfrey</author>'
                 '<dc:creator>John Polk</dc:creator>'
                 '<dc:creator>John Palfrey</dc:creator>'
                 '<bbc:show bbc:station="4">Buffy</bbc:show>'
-                '</doc>',
-                d.__repr__(1)))
-        self.assertTrue(re.match(
-                '<doc (?:xmlns'
-                '(?::bbc="http://example.org/bbc"|:dc="http://purl.org/dc/elements/1.1/"|="http://example.org/bar")'
-                ' ){3}version="2.7182818284590451">\n'
+                '</doc>'
+                )
+        self.assertEqual(
+                d.__repr__(1, 1),
+                '<doc xmlns="http://example.org/bar"'
+                ' xmlns:bbc="http://example.org/bbc" xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                ' version="2.7182818284590451">\n'
                 '\t<author>John Polk and John Palfrey</author>\n'
                 '\t<dc:creator>John Polk</dc:creator>\n'
                 '\t<dc:creator>John Palfrey</dc:creator>\n'
                 '\t<bbc:show bbc:station="4">Buffy</bbc:show>\n'
                 '</doc>',
-                d.__repr__(1, 1)))
+                )
 
         self.assertEqual(parse('<doc>a<baz>f<b>o</b>ob<b>a</b>r</baz>a</doc>').__repr__(1,1),
                 '<doc>\n'
