@@ -12,7 +12,7 @@ if 'SF_SANDBOX' in os.environ:
     svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
 
 
-class BeatBoxDemo:
+class BeatBoxDemo(object):
     def login(self, username, password):
         self.password = password
         loginResult = svc.login(username, password)

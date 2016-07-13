@@ -5,7 +5,8 @@ from io import BytesIO
 from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHandler
 from xml.sax import make_parser
 from xml.sax.handler import feature_namespaces
-from beatbox_six import python_2_unicode_compatible, StringIO, text_type, xrange
+
+from beatbox_six import python_2_unicode_compatible, StringIO, text_type, xrange, urlopen
 
 __version__ = "2.18"
 __author__ = "Aaron Swartz"
@@ -329,8 +330,11 @@ def parse(text):
 
 
 def load(url):
-    import urllib
-    return seed(urllib.urlopen(url))
+    """Load XML from a public url  (unused)
+
+    >>> print(beatbox.xmltramp.load("http://www.w3schools.com/xml/note.xml").__repr__(1, 1))
+    """
+    return seed(urlopen(url))
 
 
 class XmlTrampTests(unittest.TestCase):
