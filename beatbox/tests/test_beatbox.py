@@ -129,15 +129,5 @@ class TestSoapEnvelope(unittest.TestCase):
             b'</s:Body></s:Envelope>', env)
 
 
-def all_tests():
-    """Test suite for setup.py that combines all *unit* tests to one suite."""
-    loader = unittest.defaultTestLoader
-    return unittest.TestSuite([loader.loadTestsFromModule(xmltramp),
-                               loader.loadTestsFromTestCase(TestXmlWriter),
-                               loader.loadTestsFromTestCase(TestSoapWriter),
-                               loader.loadTestsFromTestCase(TestSoapEnvelope)
-                               ])
-
-
 if __name__ == '__main__':
     unittest.main()

@@ -2,3 +2,6 @@
 build/
 dist/
 beatbox.egg-info/
+.tox/
+.coverage
+htmlcov/
