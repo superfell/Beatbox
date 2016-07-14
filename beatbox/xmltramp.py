@@ -6,7 +6,7 @@ from xml.sax.handler import EntityResolver, DTDHandler, ContentHandler, ErrorHan
 from xml.sax import make_parser
 from xml.sax.handler import feature_namespaces
 
-from beatbox_six import python_2_unicode_compatible, StringIO, text_type, xrange, urlopen
+from beatbox.six import python_2_unicode_compatible, StringIO, text_type, xrange, urlopen
 
 __version__ = "2.18"
 __author__ = "Aaron Swartz"

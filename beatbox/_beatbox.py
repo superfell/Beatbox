@@ -1,14 +1,18 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
+# The name of module is "_beatbox" because the same name in the package
+# "beatbox" would be problematic.
 from __future__ import print_function
 
-from beatbox_six import BytesIO, http_client, text_type, urlparse, xrange
 import gzip
 import datetime
-import xmltramp
-from xmltramp import islst
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl
+
+import beatbox
+from beatbox.six import BytesIO, http_client, text_type, urlparse, xrange
+from beatbox import xmltramp
+from beatbox.xmltramp import islst
 
 __version__ = "0.96"
 __author__ = "Simon Fell"
@@ -26,15 +30,10 @@ _tPartnerNS = xmltramp.Namespace(_partnerNs)
 _tSObjectNS = xmltramp.Namespace(_sobjectNs)
 _tSoapNS = xmltramp.Namespace(_envNs)
 
-# global config
-gzipRequest = True    # are we going to gzip the request ?
-gzipResponse = True   # are we going to tell the server to gzip the response ?
-forceHttp = False     # force all connections to be HTTP, for debugging
-
 
 def makeConnection(scheme, host, timeout=1200):
     kwargs = {'timeout': timeout}
-    if forceHttp or scheme.upper() == 'HTTP':
+    if beatbox.forceHttp or scheme.upper() == 'HTTP':
         return http_client.HTTPConnection(host, **kwargs)
     return http_client.HTTPSConnection(host, **kwargs)
 
@@ -282,6 +281,13 @@ class IterClient(Client):
                 yield response
 
 
+# === End of public interface ===
+
+# (everything below is private, even without leading underscore)
+
+
+# classes for writing XML output (used by SoapEnvelope)
+
 class BeatBoxXmlGenerator(XMLGenerator):
     """Fixed version of XmlGenerator, handles unqualified attributes correctly."""
     def __init__(self, destination, encoding):
@@ -382,7 +388,7 @@ class SoapWriter(XmlWriter):
     __xsiNs = "http://www.w3.org/2001/XMLSchema-instance"
 
     def __init__(self):
-        XmlWriter.__init__(self, gzipRequest)
+        XmlWriter.__init__(self, beatbox.gzipRequest)
         self.startPrefixMapping("s", _envNs)
         self.startPrefixMapping("p", _partnerNs)
         self.startPrefixMapping("o", _sobjectNs)
@@ -452,9 +458,9 @@ class SoapEnvelope(object):
         headers = {"User-Agent": "BeatBox/" + __version__,
                    "SOAPAction": '""',
                    "Content-Type": "text/xml; charset=utf-8"}
-        if gzipResponse:
+        if beatbox.gzipResponse:
             headers['accept-encoding'] = 'gzip'
-        if gzipRequest:
+        if beatbox. gzipRequest:
             headers['content-encoding'] = 'gzip'
         close = False
         (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)

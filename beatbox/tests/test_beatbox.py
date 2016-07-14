@@ -1,9 +1,10 @@
 import unittest
-import beatbox
 import datetime
 import gzip
-import xmltramp
-from beatbox_six import BytesIO
+
+import beatbox
+from beatbox import xmltramp
+from beatbox.six import BytesIO
 
 
 class TestXmlWriter(unittest.TestCase):
