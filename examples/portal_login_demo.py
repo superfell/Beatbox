@@ -4,13 +4,12 @@ from __future__ import print_function
 import os
 import sys
 import beatbox
-import xmltramp
-import datetime
 
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
 if 'SF_SANDBOX' in os.environ:
     svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
+
 
 class BeatBoxDemo:
     def login(self, username, password, orgId, portalId):
@@ -19,7 +18,7 @@ class BeatBoxDemo:
 
 if __name__ == "__main__":
 
-    if len(sys.argv) <4 or len(sys.argv) > 5:
+    if len(sys.argv) < 4 or len(sys.argv) > 5:
         print("usage is login_portal.py <username> <password> <orgId> {portalId}")
     else:
         demo = BeatBoxDemo()

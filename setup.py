@@ -10,8 +10,7 @@ from setuptools import setup, find_packages
 setup(
     name="beatbox",
     version="0.96",
-    py_modules=["beatbox", "beatbox_six", "xmltramp"],
-    test_suite="test_beatbox.all_tests",
+    test_suite="beatbox",
     description="Makes the salesforce.com SOAP API easily accessible.",
     author="Simon Fell",
     classifiers=[

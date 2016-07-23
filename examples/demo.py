@@ -3,17 +3,16 @@
 import os
 import sys
 import beatbox
-import xmltramp
 import datetime
 
 sf = beatbox._tPartnerNS
 svc = beatbox.Client()
-beatbox.gzipRequest=False
+beatbox.gzipRequest = False
 if 'SF_SANDBOX' in os.environ:
     svc.serverUrl = svc.serverUrl.replace('login.', 'test.')
 
 
-class BeatBoxDemo:
+class BeatBoxDemo(object):
     def login(self, username, password):
         self.password = password
         loginResult = svc.login(username, password)
@@ -53,8 +52,10 @@ class BeatBoxDemo:
             for rec in qr[sf.records:]:
                 print(str(rec[0]) + " : " + str(rec[2]) + " : " + str(rec[3]))
 
+    # sObjects methods
+
     def query(self):
-        print("\nquery"         )
+        print("\nquery")
         qr = svc.query("select Id, Name from Account")
         self.dumpQueryResult(qr)
 
@@ -75,20 +76,20 @@ class BeatBoxDemo:
             print("Skipped 'upsert' because the custom external Id field doesn't exist")
             return
         print("\nupsert")
-        t = { 'type': 'Task',
-              'ChandlerId__c': '12345',
-              'subject': 'BeatBoxTest updated',
-              'ActivityDate' : datetime.date(2006,2,20) }
+        t = {'type': 'Task',
+             'ChandlerId__c': '12345',
+             'subject': 'BeatBoxTest updated',
+             'ActivityDate': datetime.date(2006, 2, 20)}
 
         ur = svc.upsert('ChandlerId__c', t)
         print(str(ur[sf.success]) + " -> " + str(ur[sf.id]))
 
-        t = {   'type': 'Event',
-            'ChandlerId__c': '67890',
-            'durationinminutes': 45,
-            'subject': 'BeatBoxTest',
-            'ActivityDateTime' : datetime.datetime(2006,2,20,13,30,30),
-            'IsPrivate': False }
+        t = {'type': 'Event',
+             'ChandlerId__c': '67890',
+             'durationinminutes': 45,
+             'subject': 'BeatBoxTest',
+             'ActivityDateTime': datetime.datetime(2006, 2, 20, 13, 30, 30),
+             'IsPrivate': False}
         ur = svc.upsert('ChandlerId__c', t)
         if str(ur[sf.success]) == 'true':
             print("id " + str(ur[sf.id]))
@@ -97,10 +98,10 @@ class BeatBoxDemo:
 
     def update(self):
         print("\nupdate")
-        a = { 'type': 'Account',
-              'Id':   self.__idToDelete,
-              'Name': 'BeatBoxBaby',
-              'NumberofLocations__c': 123.456 }
+        a = {'type': 'Account',
+             'Id':   self.__idToDelete,
+             'Name': 'BeatBoxBaby',
+             'NumberofLocations__c': 123.456}
         if not any(f[sf.name] == 'NumberofLocations__c' for f in svc.describeSObjects("Account")[sf.fields:]):
             del a['NumberofLocations__c']
             print("Skipped a custom field NumberofLocations__c that doesn't exist")
@@ -113,9 +114,9 @@ class BeatBoxDemo:
 
     def create(self):
         print("\ncreate")
-        a = { 'type': 'Account',
-            'Name': 'New Account',
-            'Website': 'http://www.pocketsoap.com/' }
+        a = {'type': 'Account',
+             'Name': 'New Account',
+             'Website': 'http://www.pocketsoap.com/'}
         sr = svc.create([a])
 
         if str(sr[sf.success]) == 'true':
@@ -124,10 +125,11 @@ class BeatBoxDemo:
         else:
             print("error " + str(sr[sf.errors][sf.statusCode]) + ":" + str(sr[sf.errors][sf.message]))
 
-
     def getUpdated(self):
         print("\ngetUpdated")
-        updatedIds = svc.getUpdated("Account", datetime.datetime.today()-datetime.timedelta(1), datetime.datetime.today()+datetime.timedelta(1))
+        updatedIds = svc.getUpdated("Account",
+                                    datetime.datetime.today() - datetime.timedelta(1),
+                                    datetime.datetime.today() + datetime.timedelta(1))
         self.__theIds = []
         for id in updatedIds[sf.ids:]:
             print("getUpdated " + str(id))
@@ -151,7 +153,9 @@ class BeatBoxDemo:
 
     def getDeleted(self):
         print("\ngetDeleted")
-        drs = svc.getDeleted("Account", datetime.datetime.today()-datetime.timedelta(1), datetime.datetime.today()+datetime.timedelta(1))
+        drs = svc.getDeleted("Account",
+                             datetime.datetime.today() - datetime.timedelta(1),
+                             datetime.datetime.today() + datetime.timedelta(1))
         print("latestDate Covered : " + str(drs[sf.latestDateCovered]))
         for dr in drs[sf.deletedRecords:]:
             print("getDeleted " + str(dr[sf.id]) + " on " + str(dr[sf.deletedDate]))
@@ -173,6 +177,8 @@ class BeatBoxDemo:
         for acc in accounts:
             print(str(acc[beatbox._tSObjectNS.Id]) + " : " + str(acc[beatbox._tSObjectNS.Name]))
 
+    # special
+
     def getUserInfo(self):
         print("\ngetUserInfo")
         ui = svc.getUserInfo()
@@ -190,14 +196,14 @@ class BeatBoxDemo:
 
     def convertLead(self):
         print("\nconvertLead")
-        lead = { 'type' : 'Lead',
-                 'LastName' : 'Fell',
-                 'Company' : '@superfell' }
+        lead = {'type': 'Lead',
+                'LastName': 'Fell',
+                'Company': '@superfell'}
         leadId = str(svc.create(lead)[sf.id])
         print("created new lead with id " + leadId)
-        convert = { 'leadId' : leadId,
-                    'convertedStatus' : 'Closed - Converted',
-                    'doNotCreateOpportunity' : 'true' }
+        convert = {'leadId': leadId,
+                   'convertedStatus': 'Closed - Converted',
+                   'doNotCreateOpportunity': 'true'}
         res = svc.convertLead(convert)
         print("converted lead to contact with Id " + str(res[sf.contactId]))
 
@@ -210,7 +216,7 @@ class BeatBoxDemo:
         print("\ndescribeSObjects(Lead, Contact)")
         desc = svc.describeSObjects(["Lead", "Contact"])
         for d in desc:
-            print(str(d[sf.name]) + "\n" + ( "-" * len(str(d[sf.name]))))
+            print(str(d[sf.name]) + "\n" + ("-" * len(str(d[sf.name]))))
             for f in d[sf.fields:]:
                 print("\t" + str(f[sf.name]))
 
@@ -223,7 +229,6 @@ class BeatBoxDemo:
                 print("\t" + str(s[sf.heading]))
 
 
-
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
@@ -234,7 +239,7 @@ if __name__ == "__main__":
         demo.getServerTimestamp()
         demo.getUserInfo()
         demo.convertLead()
-        #demo.resetPassword()
+        # demo.resetPassword()
         demo.describeGlobal()
         demo.describeSearchScopeOrder()
         demo.describeTabs()
@@ -252,4 +257,3 @@ if __name__ == "__main__":
         demo.retrieve()
         demo.retrieve_by_iterclient()
         demo.search()
-

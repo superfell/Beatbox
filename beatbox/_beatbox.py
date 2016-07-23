@@ -1,14 +1,18 @@
 """beatbox: Makes the salesforce.com SOAP API easily accessible."""
+# The name of module is "_beatbox" because the same name in the package
+# "beatbox" would be problematic.
 from __future__ import print_function
 
-from beatbox_six import PY3, BytesIO, http_client, text_type, urlparse, xrange
 import gzip
 import datetime
-import xmltramp
-from xmltramp import islst
 from xml.sax.saxutils import XMLGenerator
 from xml.sax.saxutils import quoteattr
 from xml.sax.xmlreader import AttributesNSImpl
+
+import beatbox
+from beatbox.six import BytesIO, http_client, text_type, urlparse, xrange
+from beatbox import xmltramp
+from beatbox.xmltramp import islst
 
 __version__ = "0.96"
 __author__ = "Simon Fell"
@@ -26,21 +30,16 @@ _tPartnerNS = xmltramp.Namespace(_partnerNs)
 _tSObjectNS = xmltramp.Namespace(_sobjectNs)
 _tSoapNS = xmltramp.Namespace(_envNs)
 
-# global config
-gzipRequest = True    # are we going to gzip the request ?
-gzipResponse = True   # are we going to tell the server to gzip the response ?
-forceHttp = False     # force all connections to be HTTP, for debugging
-
 
 def makeConnection(scheme, host, timeout=1200):
     kwargs = {'timeout': timeout}
-    if forceHttp or scheme.upper() == 'HTTP':
+    if beatbox.forceHttp or scheme.upper() == 'HTTP':
         return http_client.HTTPConnection(host, **kwargs)
     return http_client.HTTPSConnection(host, **kwargs)
 
 
-# the main sforce client proxy class
 class Client(object):
+    """The main sforce client proxy class."""
     def __init__(self):
         self.batchSize = 500
         self.serverUrl = "https://login.salesforce.com/services/Soap/u/36.0"
@@ -52,40 +51,48 @@ class Client(object):
         if self.__conn:
             self.__conn.close()
 
-    # login, the serverUrl and sessionId are automatically handled, returns the loginResult structure
     def login(self, username, password):
+        """"Login.  returns the loginResult structure"""
         lr = LoginRequest(self.serverUrl, username, password).post()
         self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
         return lr
 
-    # perform a portal login, orgId is always needed, portalId is needed for new style portals
-    # is not required for the old self service portal
-    # for the self service portal, only the login request will work, self service users don't
-    # get API access, for new portals, the users should have API acesss, and can call the rest
-    # of the API.
     def portalLogin(self, username, password, orgId, portalId):
+        """Perform a portal login.
+
+        orgId is always needed, portalId is needed for new style portals
+        is not required for the old self service portal
+        for the self service portal, only the login request will work, self service users don't
+        get API access, for new portals, the users should have API acesss, and can call the rest
+        of the API.
+        """
         lr = PortalLoginRequest(self.serverUrl, username, password, orgId, portalId).post()
         self.useSession(str(lr[_tPartnerNS.sessionId]), str(lr[_tPartnerNS.serverUrl]))
         return lr
 
-    # initialize from an existing sessionId & serverUrl, useful if we're being launched via a custom link
     def useSession(self, sessionId, serverUrl):
+        """Initialize from an existing sessionId & serverUrl
+
+        Useful if we're being launched via a custom link
+        """
         self.sessionId = sessionId
         self.__serverUrl = serverUrl
         (scheme, host, path, params, query, frag) = urlparse(self.__serverUrl)
         self.__conn = makeConnection(scheme, host)
 
-    # calls logout which invalidates the current sessionId, in general its better to not call this and just
-    # let the sessions expire on their own.
     def logout(self):
+        """Calls logout which invalidates the current sessionId.
+
+        In general its better to not call this and just let the sessions expire on their own.
+        """
         return LogoutRequest(self.__serverUrl, self.sessionId, self.headers).post(self.__conn, True)
 
-    # set the batchSize property on the Client instance to change the batchsize for query/queryMore
     def query(self, soql):
+        """Set the batchSize property on the Client instance to change the batchsize for query/queryMore."""
         return QueryRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, soql).post(self.__conn)
 
-    # query include deleted and archived rows.
     def queryAll(self, soql):
+        """Query include deleted and archived rows."""
         return QueryRequest(self.__serverUrl, self.sessionId, self.headers, self.batchSize, soql, "queryAll").post(self.__conn)
 
     def queryMore(self, queryLocator):
@@ -100,46 +107,48 @@ class Client(object):
     def getDeleted(self, sObjectType, start, end):
         return GetDeletedRequest(self.__serverUrl, self.sessionId, self.headers, sObjectType, start, end).post(self.__conn)
 
-    # ids can be 1 or a list, returns a single save result or a list
     def retrieve(self, fields, sObjectType, ids):
+        """ids can be 1 or a list, returns a single save result or a list"""
         return RetrieveRequest(self.__serverUrl, self.sessionId, self.headers, fields, sObjectType, ids).post(self.__conn)
 
-    # sObjects can be 1 or a list, returns a single save result or a list
     def create(self, sObjects):
+        """sObjects can be 1 or a list, returns a single save result or a list"""
         return CreateRequest(self.__serverUrl, self.sessionId, self.headers, sObjects).post(self.__conn)
 
-    # sObjects can be 1 or a list, returns a single save result or a list
     def update(self, sObjects):
+        """sObjects can be 1 or a list, returns a single save result or a list"""
         return UpdateRequest(self.__serverUrl, self.sessionId, self.headers, sObjects).post(self.__conn)
 
-    # sObjects can be 1 or a list, returns a single upsert result or a list
     def upsert(self, externalIdName, sObjects):
+        """sObjects can be 1 or a list, returns a single upsert result or a list"""
         return UpsertRequest(self.__serverUrl, self.sessionId, self.headers, externalIdName, sObjects).post(self.__conn)
 
-    # ids can be 1 or a list, returns a single delete result or a list
     def delete(self, ids):
+        """ids can be 1 or a list, returns a single delete result or a list"""
         return DeleteRequest(self.__serverUrl, self.sessionId, self.headers, ids).post(self.__conn)
 
-    # ids can be 1 or a list, returns a single delete result or a list
     def undelete(self, ids):
+        """ids can be 1 or a list, returns a single delete result or a list"""
         return UndeleteRequest(self.__serverUrl, self.sessionId, self.headers, ids).post(self.__conn)
 
-    # leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per
-    # the LeadConvert type in the WSDL.
-    #   <element name="accountId"              type="tns:ID" nillable="true"/>
-    #   <element name="contactId"              type="tns:ID" nillable="true"/>
-    #   <element name="convertedStatus"        type="xsd:string"/>
-    #   <element name="doNotCreateOpportunity" type="xsd:boolean"/>
-    #   <element name="leadId"                 type="tns:ID"/>
-    #   <element name="opportunityName"        type="xsd:string" nillable="true"/>
-    #   <element name="overwriteLeadSource"    type="xsd:boolean"/>
-    #   <element name="ownerId"                type="tns:ID"     nillable="true"/>
-    #   <element name="sendNotificationEmail"  type="xsd:boolean"/>
     def convertLead(self, leadConverts):
+        """
+        leadConverts can be 1 or a list of dictionaries, each dictionary should be filled out as per
+        the LeadConvert type in the WSDL.
+          <element name="accountId"              type="tns:ID" nillable="true"/>
+          <element name="contactId"              type="tns:ID" nillable="true"/>
+          <element name="convertedStatus"        type="xsd:string"/>
+          <element name="doNotCreateOpportunity" type="xsd:boolean"/>
+          <element name="leadId"                 type="tns:ID"/>
+          <element name="opportunityName"        type="xsd:string" nillable="true"/>
+          <element name="overwriteLeadSource"    type="xsd:boolean"/>
+          <element name="ownerId"                type="tns:ID"     nillable="true"/>
+          <element name="sendNotificationEmail"  type="xsd:boolean"/>
+        """
         return ConvertLeadRequest(self.__serverUrl, self.sessionId, self.headers, leadConverts).post(self.__conn)
 
-    # sObjectTypes can be 1 or a list, returns a single describe result or a list of them
     def describeSObjects(self, sObjectTypes):
+        """sObjectTypes can be 1 or a list, returns a single describe result or a list of them"""
         return DescribeSObjectsRequest(self.__serverUrl, self.sessionId, self.headers, sObjectTypes).post(self.__conn)
 
     def describeGlobal(self):
@@ -158,7 +167,7 @@ class Client(object):
     def describeQuickActions(self, actions):
         return DescribeQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, actions).post(self.__conn, True)
 
-    def describeAvailableQuickActions(self, parentType = None):
+    def describeAvailableQuickActions(self, parentType=None):
         return DescribeAvailableQuickActionsRequest(self.__serverUrl, self.sessionId, self.headers, parentType
                                                     ).post(self.__conn, True)
 
@@ -215,8 +224,8 @@ class IterClient(Client):
     def queryAll(self, soql):
         return self.gatherRecords(super(IterClient, self).queryAll(soql))
 
-    # ids can be 1 or a list, returns a single save result or a list
     def retrieve(self, fields, sObjectType, ids, chunkLength=None):
+        """ids can be 1 or a list, returns a single save result or a list"""
         for chunk in self.chunkRequests(ids, chunkLength=chunkLength):
             if len(chunk) == 1:
                 responses = [super(IterClient, self).retrieve(fields, sObjectType, chunk)]
@@ -272,8 +281,15 @@ class IterClient(Client):
                 yield response
 
 
-# fixed version of XmlGenerator, handles unqualified attributes correctly
+# === End of public interface ===
+
+# (everything below is private, even without leading underscore)
+
+
+# classes for writing XML output (used by SoapEnvelope)
+
 class BeatBoxXmlGenerator(XMLGenerator):
+    """Fixed version of XmlGenerator, handles unqualified attributes correctly."""
     def __init__(self, destination, encoding):
         self._out = destination
         XMLGenerator.__init__(self, destination, encoding)
@@ -297,8 +313,8 @@ class BeatBoxXmlGenerator(XMLGenerator):
         self._write(text_type('>'))
 
 
-# general purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator
 class XmlWriter(object):
+    """General purpose xml writer, does a bunch of useful stuff above & beyond XmlGenerator."""
     def __init__(self, doGzip):
         self.__buf = BytesIO()
         if doGzip:
@@ -321,8 +337,8 @@ class XmlWriter(object):
         self.xg.startElementNS((namespace, name), name, attrs)
         self.__elems.append((namespace, name))
 
-    # if value is a list, then it writes out repeating elements, one for each value
     def writeStringElement(self, namespace, name, value, attrs=_noAttrs):
+        """If value is a list, then it writes out repeating elements, one for each value"""
         if islst(value):
             for v in value:
                 self.writeStringElement(namespace, name, v, attrs)
@@ -357,8 +373,8 @@ class XmlWriter(object):
         return self.__buf.getvalue()
 
 
-# exception class for soap faults
 class SoapFaultError(Exception):
+    """Exception class for soap faults."""
     def __init__(self, faultCode, faultString):
         self.faultCode = faultCode
         self.faultString = faultString
@@ -367,12 +383,12 @@ class SoapFaultError(Exception):
         return repr(self.faultCode) + " " + repr(self.faultString)
 
 
-# soap specific stuff ontop of XmlWriter
 class SoapWriter(XmlWriter):
+    """SOAP specific stuff ontop of XmlWriter."""
     __xsiNs = "http://www.w3.org/2001/XMLSchema-instance"
 
     def __init__(self):
-        XmlWriter.__init__(self, gzipRequest)
+        XmlWriter.__init__(self, beatbox.gzipRequest)
         self.startPrefixMapping("s", _envNs)
         self.startPrefixMapping("p", _partnerNs)
         self.startPrefixMapping("o", _sobjectNs)
@@ -397,8 +413,8 @@ class SoapWriter(XmlWriter):
         return XmlWriter.endDocument(self)
 
 
-# processing for a single soap request / response
 class SoapEnvelope(object):
+    """Processing for a single soap request / response."""
     def __init__(self, serverUrl, operationName, clientId="BeatBox/" + __version__):
         self.serverUrl = serverUrl
         self.operationName = operationName
@@ -428,20 +444,23 @@ class SoapEnvelope(object):
         s.endElement()  # body
         return s.endDocument()
 
-    # does all the grunt work,
-    #   serializes the request,
-    #   makes a http request,
-    #   passes the response to tramp
-    #   checks for soap fault
-    #   todo: check for mU='1' headers
-    #   returns the relevant result from the body child
     def post(self, conn=None, alwaysReturnList=False):
+        """Complete the envelope and send the request
+
+        does all the grunt work,
+          serializes the request,
+          makes a http request,
+          passes the response to tramp
+          checks for soap fault
+          todo: check for mU='1' headers
+          returns the relevant result from the body child
+        """
         headers = {"User-Agent": "BeatBox/" + __version__,
-                   "SOAPAction": "\"\"",
+                   "SOAPAction": '""',
                    "Content-Type": "text/xml; charset=utf-8"}
-        if gzipResponse:
+        if beatbox.gzipResponse:
             headers['accept-encoding'] = 'gzip'
-        if gzipRequest:
+        if beatbox. gzipRequest:
             headers['content-encoding'] = 'gzip'
         close = False
         (scheme, host, path, params, query, frag) = urlparse(self.serverUrl)
@@ -450,7 +469,7 @@ class SoapEnvelope(object):
             close = True
         rawRequest = self.makeEnvelope()
         # print(rawRequest)
-        conn.request("POST", path, rawRequest, headers)
+        conn.request("POST", self.serverUrl, rawRequest, headers)
         response = conn.getresponse()
         rawResponse = response.read()
         if response.getheader('content-encoding', '') == 'gzip':
@@ -498,8 +517,8 @@ class PortalLoginRequest(LoginRequest):
         s.endElement()
 
 
-# base class for all methods that require a sessionId
 class AuthenticatedRequest(SoapEnvelope):
+    """Base class for all methods that require an autheticated request."""
     def __init__(self, serverUrl, sessionId, headers, operationName):
         SoapEnvelope.__init__(self, serverUrl, operationName)
         self.sessionId = sessionId
