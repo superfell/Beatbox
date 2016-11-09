@@ -24,4 +24,4 @@ If you see an error similar to `ssl.SSLError: [SSL: SSLV3_ALERT_HANDSHAKE_FAILUR
 
 ## About PyPi/Beatbox
 
-This version of Beatbox is not fully compatibile with the version at https://pypi.python.org/pypi/beatbox/32.1 See issue #43 for all the details.
+This version of Beatbox is not fully compatibile with the version at https://pypi.python.org/pypi/beatbox/32.1 See [issue #43](https://github.com/superfell/Beatbox/issues/43) for all the details.
