@@ -21,3 +21,7 @@ needs to be 1.0.1 or greater. You can run `python --version` to check your pytho
 Note that if you're on OSX, its bundled with an older version of openSSL than is required. 
 If you see an error similar to `ssl.SSLError: [SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure`  or 
 `UNSUPPORTED_CLIENT: TLS 1.0 has been disabled in this organization. Please use TLS 1.1 or higher when connecting to Salesforce using https.` you need to update your python and/or OpenSSL versions.
+
+## About PyPi/Beatbox
+
+This version of Beatbox is not fully compatibile with the version at https://pypi.python.org/pypi/beatbox/32.1 See issue #43 for all the details.
