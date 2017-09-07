@@ -17,10 +17,10 @@ The beatbox3 PyPI is stale and not Python 3 compatible (refer to issue #46).
 To ensure that you are using the latest python3 compatible version please install using pip syntax:
 
 #### Command line:
-`pip install -e git+https://github.com/superfell/Beatbox@master#egg=beatbox3`
+`pip install -e git+https://github.com/superfell/Beatbox@master#egg=beatbox`
 
 #### In requirements.txt:
-`-e git+https://github.com/superfell/Beatbox@master#egg=beatbox3`
+`-e git+https://github.com/superfell/Beatbox@master#egg=beatbox`
 
 ## About TLS 1.2 Support
 
