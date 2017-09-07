@@ -10,6 +10,17 @@ Beatbox is released under the GPL v2.
 
 Beatbox requires Python 2.7.9 or later or Python 3.4 or later. Thanks [hynekcer](https://github.com/hynekcer) for the Python 3 support!
 
+## Installation (Python 3)
+
+The beatbox3 PyPI is stale and not Python 3 compatible (refer to issue #46). 
+
+To ensure that you are using the latest python3 compatible version please install using pip syntax:
+
+#### Command line:
+`pip install -e git+https://github.com/superfell/Beatbox@master#egg=beatbox3`
+
+#### In requirements.txt:
+`-e git+https://github.com/superfell/Beatbox@master#egg=beatbox3`
 
 ## About TLS 1.2 Support
 
