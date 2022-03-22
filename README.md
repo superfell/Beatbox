@@ -12,7 +12,7 @@ Beatbox requires Python 2.7.9 or later or Python 3.4 or later. Thanks [hynekcer]
 
 ## Installation (Python 3)
 
-The beatbox3 PyPI is stale and not Python 3 compatible (refer to issue #46). 
+The Beatbox3 PyPI is stale and not Python 3 compatible (refer to issue #46). 
 
 To ensure that you are using the latest python3 compatible version please install using pip syntax:
 
@@ -22,11 +22,20 @@ To ensure that you are using the latest python3 compatible version please instal
 #### In requirements.txt:
 `-e git+https://github.com/superfell/Beatbox@master#egg=beatbox`
 
+## About Salesforce API retirement
+
+During 2022 Salesforce are planning to [retire API versions v7 through v20](https://help.salesforce.com/s/articleView?id=000354473&type=1). 
+Also planned for 2023 is the retirement of versions v21 through v30.
+If you're on an older version of Beatbox you'll need to update to the latest (which uses API v36) in order for your integrations to continue to work.
+You may also need to update code for API calls where the response structure has changed from the version you're currently using e.g. DescribeGlobal
+changed significantly somewhere around API v16.
+
+
 ## About TLS 1.2 Support
 
 During 2016 Salesforce plans to [disable TLS 1.0](https://help.salesforce.com/apex/HTViewSolution?id=000221207) support on their service. 
 In order for Beatbox to continue working you need to use
-a python environment that supports TLS 1.2, to do that you need to use Python 2.7.9 (or any newer 2.x version) and your OpenSSL version
+a python environment that supports TLS 1.2. To do that you need to use Python 2.7.9 (or any newer 2.x version) and your OpenSSL version
 needs to be 1.0.1 or greater. You can run `python --version` to check your python version and `python -c "import ssl; print ssl.OPENSSL_VERSION"` to check the version of OpenSSL that python is using.
 
 Note that if you're on OSX, its bundled with an older version of openSSL than is required. 
@@ -35,4 +44,4 @@ If you see an error similar to `ssl.SSLError: [SSL: SSLV3_ALERT_HANDSHAKE_FAILUR
 
 ## About PyPi/Beatbox
 
-This version of Beatbox is not fully compatibile with the version at https://pypi.python.org/pypi/beatbox/32.1 See [issue #43](https://github.com/superfell/Beatbox/issues/43) for all the details.
+This version of Beatbox is not fully compatible with the version at https://pypi.python.org/pypi/beatbox/32.1 See [issue #43](https://github.com/superfell/Beatbox/issues/43) for all the details.
